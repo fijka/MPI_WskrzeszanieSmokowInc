@@ -1,1 +1,2 @@
-# MPI_WskrzeszanieSmokowInc
+# Wskrzeszanie Smoków, Inc.
+MPI application
