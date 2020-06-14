@@ -3,12 +3,20 @@
 #include "main_thread.h"
 #include <pthread.h>
 
-
 state_t state;
 volatile char end = FALSE;
 int size, rank;
 MPI_Datatype MPI_PACKET_T;
 pthread_t threadCom;
+
+std::vector <int> missions;
+int deskCount = 0;
+int dragonCount = 0;
+int lamport = 0;
+int first, last;
+int DESKS, DRAGONS;
+int currentMission = 0;
+packet_t recvPacket, myPacket;
 
 pthread_mutex_t stateMut = PTHREAD_MUTEX_INITIALIZER;
 
@@ -44,12 +52,12 @@ void initialize(int *argc, char ***argv)
     check_thread_support(provided);
 
     const int nitems = 3;
-    int       blocklengths[3] = {1,1,1};
+    int       blocklengths[3] = {1, 1, 1};
     MPI_Datatype typy[3] = {MPI_INT, MPI_INT, MPI_INT};
 
     MPI_Aint offsets[3]; 
-    offsets[0] = offsetof(packet_t, ts);
-    offsets[1] = offsetof(packet_t, src);
+    offsets[0] = offsetof(packet_t, mission);
+    offsets[1] = offsetof(packet_t, ts);
     offsets[2] = offsetof(packet_t, data);
 
     MPI_Type_create_struct(nitems, blocklengths, offsets, typy, &MPI_PACKET_T);
@@ -59,7 +67,22 @@ void initialize(int *argc, char ***argv)
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     srand(rank);
 
-    pthread_create(&threadCom, NULL, startCommunicationThread, 0);
+    if (rank != 0) {
+
+        // znalezienie procesów o tej samej profesji
+        if (rank < HEAD + 1) {
+            first = 1;
+            last = HEAD;
+        } else if (rank > HEAD && rank < HEAD + BODY + 1) {
+            first = HEAD + 1;
+            last = HEAD + BODY;
+        } else {
+            first = HEAD + BODY + 1;
+            last = HEAD + BODY + TAIL;
+        }
+
+        pthread_create(&threadCom, NULL, startCommunicationThread, 0);
+    }
     debug("jestem");
 }
 
@@ -82,7 +105,7 @@ void sendPacket(packet_t *pkt, int destination, int tag)
         pkt = (packet_t*) malloc(sizeof(packet_t));
         freepkt = 1;
     }
-    pkt->src = rank;
+    // pkt->src = rank; //??
     MPI_Send(pkt, 1, MPI_PACKET_T, destination, tag, MPI_COMM_WORLD);
     if (freepkt)
         free(pkt);
@@ -98,6 +121,8 @@ void changeState(state_t newState)
 
 int main(int argc, char **argv)
 {
+    DESKS = atoi(argv[1]);
+    DRAGONS = atoi(argv[2]);
     initialize(&argc, &argv);
     mainLoop();
 

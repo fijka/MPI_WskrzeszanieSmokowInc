@@ -1,7 +1,7 @@
 #ifndef GLOBALH
 #define GLOBALH
 
-#define _GNU_SOURCE
+// #define _GNU_SOURCE
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,10 +9,17 @@
 #include <unistd.h>
 #include <string.h>
 #include <pthread.h>
+#include <vector>
 
 /* boolean */
 #define TRUE 1
 #define FALSE 0
+
+#define HEAD 1
+#define BODY 1
+#define TAIL 1
+extern int DESKS;
+extern int DRAGONS;
 
 /* używane w wątku głównym, determinuje jak często i na jak długo zmieniają się stany */
 #define STATE_CHANGE_PROB 50
@@ -25,27 +32,35 @@ typedef enum {mission_wait, mission_have, desk_wait, desk_have, cooperator_wait,
 extern state_t state;
 extern int rank;
 extern int size;
+extern std::vector <int> missions;
+extern int deskCount;
+extern int dragonCount;
+extern int lamport;
+extern int first, last;
+extern int currentMission;
+
 
 /* to może przeniesiemy do global... */
 typedef struct {
-    int ts;       /* timestamp (zegar lamporta */
-    int src;      /* pole nie przesyłane, ale ustawiane w main_loop */
+    int mission;  /* id zlecenia */
+    int ts;       /* timestamp (zegar lamporta) */
     int data;     /* przykładowe pole z danymi; można zmienić nazwę na bardziej pasującą */
 } packet_t;
 extern MPI_Datatype MPI_PACKET_T;
+
+extern packet_t recvPacket, myPacket;
 
 /* Typy wiadomości */
 #define MISSION_AD 1
 #define MISSION_REQ 2
 #define MISSION_ACK 3
 #define MISSION_HAVE 4
-#define MISSION_ACCEPTED 5
-#define DESK_REQ 6
-#define DESK_ACK 7
-#define DRAGON_REQ 8
-#define DRAGON_ACK 9
-#define DRAGON_KILL 10
-#define DRAGON_READY 11
+#define DESK_REQ 5
+#define DESK_ACK 6
+#define DRAGON_REQ 7
+#define DRAGON_ACK 8
+#define DRAGON_KILL 9
+#define DRAGON_READY 10
 
 /* macro debug - działa jak printf, kiedy zdefiniowano
    DEBUG, kiedy DEBUG niezdefiniowane działa jak instrukcja pusta 
@@ -74,4 +89,5 @@ extern MPI_Datatype MPI_PACKET_T;
 void sendPacket(packet_t *pkt, int destination, int tag);
 void changeState( state_t );
 void changeTallow( int );
+
 #endif
