@@ -110,6 +110,16 @@ void sendPacket(packet_t *pkt, int destination, int tag)
     if (freepkt)
         free(pkt);
 }
+/* zmiana czasu lamporta */
+void lamport_time(int time, int other)
+{
+	if(other > time){
+		lamport = other + 1;
+	}else{
+		lamport = time +1;
+	}
+}
+
 
 /* zmiana stanu procesu */
 void changeState(state_t newState)

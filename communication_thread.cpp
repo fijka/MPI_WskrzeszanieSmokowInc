@@ -21,12 +21,16 @@ void *startCommunicationThread(void *ptr)
     while (TRUE) {
         debug("czekam na wiadomość");
         MPI_Recv(&recvPacket, 1, MPI_PACKET_T, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-
+	lamport_time( lamport, recvPacket.ts);
+    	myPacket.ts = lamport;
+	
         switch (status.MPI_TAG) {
 
             // informacja o nowym zleceniu
             case MISSION_AD:
-                missions.push_back(1);
+
+		// dla pewnosci dalam ze wrzuca numer zlecenia
+                missions.push_back(recvPacket.mission);
                 break;
 
             // prośba o dostęp do zlecenia
@@ -37,6 +41,8 @@ void *startCommunicationThread(void *ptr)
                     // POZOR! mogę przypadkiem być w stanie mission_wait i mieć wyższy priorytet,
                     // ale starać się o inne zlecenie - to też trzeba jeszcze sprawdzić
                     // i to by chyba trzeba wszędzie sprawdzać (?) - np. przy zliczaniu ack-ów (?)
+		    lamport += 1;
+		    myPacket.ts = lamport;
                     sendPacket(&myPacket, status.MPI_SOURCE, MISSION_ACK);
                 }
                 break;
@@ -68,6 +74,8 @@ void *startCommunicationThread(void *ptr)
             case DESK_REQ:
                 if (state != desk_have or lamport < recvPacket.ts
                         or (recvPacket.ts == lamport and rank > status.MPI_SOURCE))
+		    lamport += 1;
+		    myPacket.ts = lamport;
                     sendPacket(&myPacket, status.MPI_SOURCE, DESK_ACK);
                 break;
 
@@ -87,6 +95,8 @@ void *startCommunicationThread(void *ptr)
             case DRAGON_REQ:
                 if (state != dragon_have or lamport < recvPacket.ts or
                         (recvPacket.ts == lamport and rank > status.MPI_SOURCE)) {
+		    lamport += 1;
+		    myPacket.ts = lamport;
                     sendPacket(&myPacket, status.MPI_SOURCE, DRAGON_ACK);
                 }
                 break;
@@ -114,6 +124,8 @@ void *startCommunicationThread(void *ptr)
                     changeState(mission_wait);
                     ready = 0;
                     dragonCount += 1;
+		    lamport += 1;
+		    myPacket.ts = lamport;
                 }
                 break;
 

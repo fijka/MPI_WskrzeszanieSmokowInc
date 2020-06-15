@@ -1,7 +1,7 @@
 #ifndef GLOBALH
 #define GLOBALH
 
-// #define _GNU_SOURCE
+#define _GNU_SOURCE
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -89,5 +89,6 @@ extern packet_t recvPacket, myPacket;
 void sendPacket(packet_t *pkt, int destination, int tag);
 void changeState( state_t );
 void changeTallow( int );
+void lamport_time( int, int);
 
 #endif
