@@ -28,7 +28,9 @@ void *startCommunicationThread(void *ptr)
             // informacja o nowym zleceniu
             case MISSION_AD:
                 missions.push_back(recvPacket.mission);
+            	//printf(" Nowe zlecenie! [%d] a misja [%d]", recvPacket.mission, missions[missions.size()-1]);
                 break;
+
 
             // prośba o dostęp do zlecenia
             case MISSION_REQ:
