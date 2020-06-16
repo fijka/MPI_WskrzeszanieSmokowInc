@@ -1,7 +1,7 @@
 #ifndef GLOBALH
 #define GLOBALH
 
-#define _GNU_SOURCE
+// #define _GNU_SOURCE
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,7 +32,8 @@ typedef enum {mission_wait, mission_have, desk_wait, desk_have, cooperator_wait,
 extern state_t state;
 extern int rank;
 extern int size;
-extern std::vector <int> missions;
+extern std::vector <int> missions, cooperators;
+extern std::vector <struct packet_t> coop_mis;
 extern int deskCount;
 extern int dragonCount;
 extern int lamport;
@@ -41,11 +42,11 @@ extern int currentMission;
 
 
 /* to może przeniesiemy do global... */
-typedef struct {
+struct packet_t {
     int mission;  /* id zlecenia */
     int ts;       /* timestamp (zegar lamporta) */
     int data;     /* przykładowe pole z danymi; można zmienić nazwę na bardziej pasującą */
-} packet_t;
+};
 extern MPI_Datatype MPI_PACKET_T;
 
 extern packet_t recvPacket, myPacket;
@@ -88,7 +89,6 @@ extern packet_t recvPacket, myPacket;
 
 void sendPacket(packet_t *pkt, int destination, int tag);
 void changeState( state_t );
-void changeTallow( int );
-void lamport_time( int, int);
+void lamport_time(int, int);
 
 #endif

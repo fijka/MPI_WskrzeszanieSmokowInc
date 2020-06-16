@@ -3,13 +3,14 @@
 #include "main_thread.h"
 #include <pthread.h>
 
-state_t state;
+state_t state = mission_wait;
 volatile char end = FALSE;
 int size, rank;
 MPI_Datatype MPI_PACKET_T;
 pthread_t threadCom;
 
-std::vector <int> missions;
+std::vector <int> missions, cooperators;
+std::vector <struct packet_t> coop_mis;
 int deskCount = 0;
 int dragonCount = 0;
 int lamport = 0;
@@ -24,7 +25,7 @@ pthread_mutex_t stateMut = PTHREAD_MUTEX_INITIALIZER;
 /* sprawdzenie działania wątków */
 void check_thread_support(int provided)
 {
-    printf("THREAD SUPPORT: chcemy %d. Co otrzymamy?\n", provided);
+    // printf("THREAD SUPPORT: chcemy %d. Co otrzymamy?\n", provided);
     switch (provided) {
         case MPI_THREAD_SINGLE: 
             printf("Brak wsparcia dla wątków, kończę\n");
@@ -38,7 +39,7 @@ void check_thread_support(int provided)
         case MPI_THREAD_SERIALIZED: 
             printf("tylko jeden watek naraz może wykonać wołania do biblioteki MPI\n");
 	        break;
-        case MPI_THREAD_MULTIPLE: printf("Pełne wsparcie dla wątków\n");
+        case MPI_THREAD_MULTIPLE: //printf("Pełne wsparcie dla wątków\n");
 	        break;
         default: printf("Nikt nic nie wie\n");
     }
@@ -83,7 +84,7 @@ void initialize(int *argc, char ***argv)
 
         pthread_create(&threadCom, NULL, startCommunicationThread, 0);
     }
-    debug("jestem");
+    debug("Melduję się!");
 }
 
 /* zwolnienie zasobów oraz zakończenie pracy MPI */
@@ -110,16 +111,16 @@ void sendPacket(packet_t *pkt, int destination, int tag)
     if (freepkt)
         free(pkt);
 }
+
 /* zmiana czasu lamporta */
 void lamport_time(int time, int other)
 {
-	if(other > time){
+	if (other > time){
 		lamport = other + 1;
-	}else{
-		lamport = time +1;
+	} else {
+		lamport = time + 1;
 	}
 }
-
 
 /* zmiana stanu procesu */
 void changeState(state_t newState)

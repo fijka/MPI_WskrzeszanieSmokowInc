@@ -19,17 +19,14 @@ void *startCommunicationThread(void *ptr)
 
     // PROFESJONALISTA: reakcja na odebrane wiadomości
     while (TRUE) {
-        debug("czekam na wiadomość");
         MPI_Recv(&recvPacket, 1, MPI_PACKET_T, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-	lamport_time( lamport, recvPacket.ts);
+	    lamport_time(lamport, recvPacket.ts);
     	myPacket.ts = lamport;
 	
         switch (status.MPI_TAG) {
 
             // informacja o nowym zleceniu
             case MISSION_AD:
-
-		// dla pewnosci dalam ze wrzuca numer zlecenia
                 missions.push_back(recvPacket.mission);
                 break;
 
@@ -38,11 +35,9 @@ void *startCommunicationThread(void *ptr)
                 if (state != mission_wait or recvPacket.ts > lamport
                         or (recvPacket.ts == lamport and rank > status.MPI_SOURCE)) {
                     myPacket.mission = recvPacket.mission;
-                    // POZOR! mogę przypadkiem być w stanie mission_wait i mieć wyższy priorytet,
-                    // ale starać się o inne zlecenie - to też trzeba jeszcze sprawdzić
-                    // i to by chyba trzeba wszędzie sprawdzać (?) - np. przy zliczaniu ack-ów (?)
-		    lamport += 1;
-		    myPacket.ts = lamport;
+
+		            lamport += 1;
+		            myPacket.ts = lamport;
                     sendPacket(&myPacket, status.MPI_SOURCE, MISSION_ACK);
                 }
                 break;
@@ -60,43 +55,42 @@ void *startCommunicationThread(void *ptr)
 
             // informacja o dostępie do zlecenia innego profesjonalisty
             case MISSION_HAVE:
+                cooperators.push_back(status.MPI_SOURCE);
+                coop_mis.push_back(recvPacket);
                 if (status.MPI_SOURCE >= first and status.MPI_SOURCE <= last)
-                    missions[recvPacket.mission] = 0;
-                    // trzeba jeszcze wymyślić jak ich przechowywać i czy wszystkich
-                    if (state == mission_have) {
-                        // tutaj się porównuje tych trzech
-                        // jeśli najmniej razy siedziało się przy biurku -> changeState(desk_wait)
-                        // w przeciwnym razie -> changeState(cooperator_wait)
-                    }
+                    missions[recvPacket.mission] = -1; // powinno być currentMission!
                 break;
 
             // prośba o dostęp do biurka
             case DESK_REQ:
-                if (state != desk_have or lamport < recvPacket.ts
-                        or (recvPacket.ts == lamport and rank > status.MPI_SOURCE))
-		    lamport += 1;
-		    myPacket.ts = lamport;
+                if ((state != desk_have and state != desk_wait)
+                        or (state == desk_wait and lamport < recvPacket.ts)
+                        or (state == desk_wait and recvPacket.ts == lamport and rank > status.MPI_SOURCE)) {
+		            lamport += 1;
+		            myPacket.ts = lamport;
                     sendPacket(&myPacket, status.MPI_SOURCE, DESK_ACK);
+                }
                 break;
 
             // zgoda na dostęp do biurka
             case DESK_ACK:
                 if (state = desk_wait) {
                     ackDesk += 1;
-                    if (ackDesk > size - DESKS) {
+                    if (ackDesk >= size - 1 - DESKS) {
                         ackDesk = 0;
-                        changeState(desk_have);
                         deskCount += 1;
+                        changeState(desk_have);
                     }
                 }
                 break;
 
             // prośba o dostęp do szkieletu
             case DRAGON_REQ:
-                if (state != dragon_have or lamport < recvPacket.ts or
-                        (recvPacket.ts == lamport and rank > status.MPI_SOURCE)) {
-		    lamport += 1;
-		    myPacket.ts = lamport;
+                if ((state != dragon_have and state != dragon_wait)
+                        or (state == dragon_wait and lamport < recvPacket.ts)
+                        or (state == dragon_wait and recvPacket.ts == lamport and rank > status.MPI_SOURCE)) {
+		            lamport += 1;
+		            myPacket.ts = lamport;
                     sendPacket(&myPacket, status.MPI_SOURCE, DRAGON_ACK);
                 }
                 break;
@@ -105,8 +99,9 @@ void *startCommunicationThread(void *ptr)
             case DRAGON_ACK:
                 if (state = dragon_wait) {
                     ackDragon += 1; 
-                    if (ackDragon > size - 3 * DRAGONS) {
+                    if (ackDragon > size - 1 - 3 * DRAGONS) {
                         ackDragon = 0;
+                        dragonCount += 1;
                         changeState(dragon_have);
                     }
                 }
@@ -121,11 +116,12 @@ void *startCommunicationThread(void *ptr)
             case DRAGON_READY:
                 ready += 1;
                 if (ready == 2) {
-                    changeState(mission_wait);
+                    debug("    [%d] Smok wskrzeszony! Dobra robota!", recvPacket.mission);
                     ready = 0;
                     dragonCount += 1;
-		    lamport += 1;
-		    myPacket.ts = lamport;
+		            lamport += 1;
+		            myPacket.ts = lamport;
+                    changeState(mission_wait);
                 }
                 break;
 
