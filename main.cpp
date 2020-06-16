@@ -17,7 +17,7 @@ int lamport = 0;
 int first, last;
 int DESKS, DRAGONS;
 int currentMission = 0;
-packet_t recvPacket, myPacket;
+packet_t recvPacket, myPacket, sendedPacket;
 
 pthread_mutex_t stateMut = PTHREAD_MUTEX_INITIALIZER;
 

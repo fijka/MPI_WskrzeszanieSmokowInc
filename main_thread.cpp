@@ -57,6 +57,7 @@ void mainLoop()
                                 if (i != rank) {
 				                    lamport += 1;
 		    		                myPacket.ts = lamport;
+						myPacket.data = dragonCount;
                                     sendPacket(&myPacket, i, MISSION_REQ);
                                 }
                             }

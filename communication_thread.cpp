@@ -32,12 +32,14 @@ void *startCommunicationThread(void *ptr)
 
             // prośba o dostęp do zlecenia
             case MISSION_REQ:
-                if (state != mission_wait or recvPacket.ts > lamport
+                if (state != mission_wait or recvPacket.data < dragonCount 
+               		or (recvPacket.ts < lamport and recvPacket.data ==  dragonCount)
                         or (recvPacket.ts == lamport and rank > status.MPI_SOURCE)) {
-                    myPacket.mission = recvPacket.mission;
+                    sendedPacket.mission = recvPacket.mission;
 		            lamport += 1;
 		            myPacket.ts = lamport;
-                    sendPacket(&myPacket, status.MPI_SOURCE, MISSION_ACK);
+			    sendedPacket.ts = myPacket.ts;
+                    sendPacket(&sendedPacket, status.MPI_SOURCE, MISSION_ACK);
                 }
                 break;
 
@@ -63,8 +65,9 @@ void *startCommunicationThread(void *ptr)
             // prośba o dostęp do biurka
             case DESK_REQ:
                 if ((state != desk_have and state != desk_wait)
-                        or (state == desk_wait and lamport < recvPacket.ts)
-                        or (state == desk_wait and recvPacket.ts == lamport and rank > status.MPI_SOURCE)) {
+			or (state == desk_wait and deskCount < recvPacket.data)
+                        or (state == desk_wait and lamport < recvPacket.ts and deskCount < recvPacket.data)
+                        or (state == desk_wait and deskCount < recvPacket.data and recvPacket.ts == lamport and rank > status.MPI_SOURCE)) {
 		            lamport += 1;
 		            myPacket.ts = lamport;
                     sendPacket(&myPacket, status.MPI_SOURCE, DESK_ACK);

@@ -49,7 +49,7 @@ struct packet_t {
 };
 extern MPI_Datatype MPI_PACKET_T;
 
-extern packet_t recvPacket, myPacket;
+extern packet_t recvPacket, myPacket, sendedPacket;
 
 /* Typy wiadomości */
 #define MISSION_AD 1

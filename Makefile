@@ -1,6 +1,6 @@
 SOURCES=$(wildcard *.cpp)
 HEADERS=$(SOURCES:.cpp=.h)
-FLAGS=-DDEBUG -g
+FLAGS=-DDEBUG -g -pthread
 
 all: main
 
