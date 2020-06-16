@@ -45,7 +45,7 @@ void mainLoop()
             switch (state) {
                 case mission_wait:
                     dragonReadySent = false;
-                    if ((int)missions.size() > currentMission) {
+		    if ((int)missions.size() > currentMission) {
                         if (missions[currentMission] == -1) {
                             while ((int)missions.size() <= currentMission + 1) {}
                             currentMission += 1;
@@ -58,6 +58,7 @@ void mainLoop()
 				                    lamport += 1;
 		    		                myPacket.ts = lamport;
 						myPacket.data = dragonCount;
+						//debug("njvfj");
                                     sendPacket(&myPacket, i, MISSION_REQ);
                                 }
                             }

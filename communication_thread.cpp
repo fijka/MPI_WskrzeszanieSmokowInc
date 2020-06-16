@@ -20,37 +20,40 @@ void *startCommunicationThread(void *ptr)
     // PROFESJONALISTA: reakcja na odebrane wiadomości
     while (TRUE) {
         MPI_Recv(&recvPacket, 1, MPI_PACKET_T, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-	    lamport_time(lamport, recvPacket.ts);
-    	myPacket.ts = lamport;
+	//lamport_time(lamport, recvPacket.ts);
+    	//myPacket.ts = lamport;
 	
         switch (status.MPI_TAG) {
 
             // informacja o nowym zleceniu
             case MISSION_AD:
                 missions.push_back(recvPacket.mission);
-            	//printf(" Nowe zlecenie! [%d] a misja [%d]", recvPacket.mission, missions[missions.size()-1]);
+            	//debug(" Nowe zlecenie! [%d] a misja [%d]", recvPacket.mission, missions[missions.size()-1]);
                 break;
 
 
             // prośba o dostęp do zlecenia
             case MISSION_REQ:
                 if (state != mission_wait or recvPacket.data < dragonCount 
-               		or (recvPacket.ts < lamport and recvPacket.data ==  dragonCount)
-                        or (recvPacket.ts == lamport and rank > status.MPI_SOURCE)) {
+		    //or (recvPacket.ts < lamport and recvPacket.data ==  dragonCount)
+                        or (recvPacket.data == dragonCount  and rank > status.MPI_SOURCE)) {
                     sendedPacket.mission = recvPacket.mission;
 		            lamport += 1;
 		            myPacket.ts = lamport;
 			    sendedPacket.ts = myPacket.ts;
+			    // debug("sende");
                     sendPacket(&sendedPacket, status.MPI_SOURCE, MISSION_ACK);
                 }
                 break;
 
             // zgoda na otrzymanie zlecenia
             case MISSION_ACK:
-                if (state = mission_wait) {
-                    ackMission += 1;    
+                if (state == mission_wait) {
+                    ackMission += 1;
+		    //debug("get");
                     if (ackMission == last - first) {
                         ackMission = 0;
+			//debug("mission");
                         changeState(mission_have);
                     }
                 }
