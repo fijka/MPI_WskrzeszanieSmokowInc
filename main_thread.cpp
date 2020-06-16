@@ -70,8 +70,6 @@ void mainLoop()
 
                 case mission_have:
                     if (!missionHaveSent) {
-                        // debug("%d", currentMission);
-                        // debug("mission_have %d", missions[currentMission]);
                         for (int i = 1; i < size; i++) {
                             if (i != rank) {
                                 myPacket.mission = missions[currentMission];
@@ -85,7 +83,6 @@ void mainLoop()
                     }
                     while (coop != 2) {
                         if (coop_mis.size() >= tmp + 1) {
-                            
                             if (coop_mis[tmp].mission == missions[currentMission]) {
                                 coop++;
                                 if (coop == 1) {
@@ -178,7 +175,6 @@ void mainLoop()
                     }            
                     if (deskBoy) {
                         deskBoy = false;
-                        dragonCount += 1;
                         dragonHaveSent = false;
                     }
                     break;

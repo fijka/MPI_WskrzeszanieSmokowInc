@@ -35,7 +35,6 @@ void *startCommunicationThread(void *ptr)
                 if (state != mission_wait or recvPacket.ts > lamport
                         or (recvPacket.ts == lamport and rank > status.MPI_SOURCE)) {
                     myPacket.mission = recvPacket.mission;
-
 		            lamport += 1;
 		            myPacket.ts = lamport;
                     sendPacket(&myPacket, status.MPI_SOURCE, MISSION_ACK);
@@ -119,8 +118,6 @@ void *startCommunicationThread(void *ptr)
                     debug("    [%d] Smok wskrzeszony! Dobra robota!", recvPacket.mission);
                     ready = 0;
                     dragonCount += 1;
-		            lamport += 1;
-		            myPacket.ts = lamport;
                     changeState(mission_wait);
                 }
                 break;
