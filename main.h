@@ -34,24 +34,29 @@ extern int rank;
 extern int size;
 extern std::vector <int> missions, cooperators;
 extern std::vector <struct packet_t> coop_mis;
-extern int deskCount;
-extern int dragonCount;
+extern int deskCount, dragonCount;
+extern int ackDesk, ackDragon;
 extern int lamport;
 extern int first, last;
 extern int currentMission;
-extern int requestTime;
+extern packet_t missionsReq[HEAD + BODY + TAIL];
+extern packet_t desksReq[HEAD + BODY + TAIL];
+extern packet_t dragonsReq[HEAD + BODY + TAIL];
+extern packet_t allAck[HEAD + BODY + TAIL];
 
 
 /* to może przeniesiemy do global... */
 struct packet_t {
+    int id;
     int mission;  /* id zlecenia */
-    int ts;       /* timestamp (zegar lamporta) */
+    int timeLamport;       /* timestamp (zegar lamporta) */
+    int timeRequest;
     int data;     /* przykładowe pole z danymi; można zmienić nazwę na bardziej pasującą */
-    int time;
+    packet_t *next = 0;
 };
 extern MPI_Datatype MPI_PACKET_T;
 
-extern packet_t recvPacket, myPacket, sendedPacket;
+extern packet_t recvPacket, myPacket;
 
 /* Typy wiadomości */
 #define MISSION_AD 1
@@ -64,6 +69,8 @@ extern packet_t recvPacket, myPacket, sendedPacket;
 #define DRAGON_ACK 8
 #define DRAGON_KILL 9
 #define DRAGON_READY 10
+#define DRAGON_RELEASE 11
+#define DESK_RELEASE 12
 
 /* macro debug - działa jak printf, kiedy zdefiniowano
    DEBUG, kiedy DEBUG niezdefiniowane działa jak instrukcja pusta 
