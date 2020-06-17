@@ -28,6 +28,7 @@ void mainLoop()
 
     // PROFESJONALISTA
     else {
+	requestTime = 100000000;
         bool missionReqSent = false;
         bool missionHaveSent = false;
         bool deskReqSent = false;
@@ -55,10 +56,12 @@ void mainLoop()
                         if (!missionReqSent and myPacket.mission != -1) {
                             for (int i = first; i < last + 1; i++) {
                                 if (i != rank) {
+						lamport += 1;
+						requestTime = lamport;
 				                    lamport += 1;
 		    		                myPacket.ts = lamport;
 						myPacket.data = dragonCount;
-						//debug("njvfj");
+						myPacket.time = requestTime;
                                     sendPacket(&myPacket, i, MISSION_REQ);
                                 }
                             }
@@ -92,7 +95,7 @@ void mainLoop()
                                 }
                                 else {
                                     c2 = tmp;
-                                    debug("[zlecenie %d] Biorę zlecenie z %d i %d", missions[currentMission], cooperators[c1], cooperators[c2]);
+                                    debug("[zlecenie %d, czas %d] Biorę zlecenie z %d i %d", missions[currentMission], lamport, cooperators[c1], cooperators[c2]);
                                     if (deskCount < coop_mis[c1].data and deskCount < coop_mis[c2].data) {
                                         changeState(desk_wait);
                                     } else if (deskCount > coop_mis[c1].data or deskCount > coop_mis[c2].data) {
@@ -134,7 +137,7 @@ void mainLoop()
                     break;
                 
                 case desk_have:
-                    debug("  [%d] Jestem w gildii, czekajcie!", missions[currentMission]);
+                    debug("[zlecenie %d czas %d] Jestem w gildii, czekajcie!", missions[currentMission], lamport);
                     deskReqSent = false;
                     // sleep
 		            usleep(sleepTime1);                
@@ -164,7 +167,7 @@ void mainLoop()
                     dragonReqSent = false;
                     if (!dragonHaveSent and deskBoy) {
                         dragonHaveSent = true;
-                        debug("  [%d] Mam szkielet! Chodźcie!", missions[currentMission]);
+                        debug("[zlecenie %d czas %d] Mam szkielet! Chodźcie!", missions[currentMission], lamport);
                         sendPacket(&myPacket, cooperators[c1], DRAGON_KILL);
                         sendPacket(&myPacket, cooperators[c2], DRAGON_KILL);
                     }

@@ -5,7 +5,7 @@ FLAGS=-DDEBUG -g -pthread
 all: main
 
 main: $(SOURCES) $(HEADERS)
-	mpiCC $(SOURCES) $(FLAGS) -o main
+	mpiCC $(SOURCES) $(FLAGS) -o main 
 
 clear: clean
 

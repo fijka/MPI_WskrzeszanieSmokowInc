@@ -15,8 +15,8 @@
 #define TRUE 1
 #define FALSE 0
 
-#define HEAD 2
-#define BODY 2
+#define HEAD 1
+#define BODY 1
 #define TAIL 1
 extern int DESKS;
 extern int DRAGONS;
@@ -39,6 +39,7 @@ extern int dragonCount;
 extern int lamport;
 extern int first, last;
 extern int currentMission;
+extern int requestTime;
 
 
 /* to może przeniesiemy do global... */
@@ -46,6 +47,7 @@ struct packet_t {
     int mission;  /* id zlecenia */
     int ts;       /* timestamp (zegar lamporta) */
     int data;     /* przykładowe pole z danymi; można zmienić nazwę na bardziej pasującą */
+    int time;
 };
 extern MPI_Datatype MPI_PACKET_T;
 

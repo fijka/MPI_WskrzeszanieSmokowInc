@@ -17,6 +17,7 @@ int lamport = 0;
 int first, last;
 int DESKS, DRAGONS;
 int currentMission = 0;
+int requestTime;
 packet_t recvPacket, myPacket, sendedPacket;
 
 pthread_mutex_t stateMut = PTHREAD_MUTEX_INITIALIZER;
@@ -52,14 +53,15 @@ void initialize(int *argc, char ***argv)
     MPI_Init_thread(argc, argv,MPI_THREAD_MULTIPLE, &provided);
     check_thread_support(provided);
 
-    const int nitems = 3;
-    int       blocklengths[3] = {1, 1, 1};
-    MPI_Datatype typy[3] = {MPI_INT, MPI_INT, MPI_INT};
+    const int nitems = 4;
+    int       blocklengths[4] = {1, 1, 1, 1};
+    MPI_Datatype typy[4] = {MPI_INT, MPI_INT, MPI_INT, MPI_INT};
 
-    MPI_Aint offsets[3]; 
+    MPI_Aint offsets[4]; 
     offsets[0] = offsetof(packet_t, mission);
     offsets[1] = offsetof(packet_t, ts);
     offsets[2] = offsetof(packet_t, data);
+    offsets[3] = offsetof(packet_t, time);
 
     MPI_Type_create_struct(nitems, blocklengths, offsets, typy, &MPI_PACKET_T);
     MPI_Type_commit(&MPI_PACKET_T);
