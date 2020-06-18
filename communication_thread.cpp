@@ -64,7 +64,7 @@ void *startCommunicationThread(void *ptr)
                 cooperators.push_back(status.MPI_SOURCE);
                 coop_mis.push_back(recvPacket);
                 if (status.MPI_SOURCE >= first and status.MPI_SOURCE <= last)
-                    missions[recvPacket.mission] = -1; // powinno być currentMission!
+                    missions[currentMission] = -1; // powinno być currentMission!
                 break;
 
             // prośba o dostęp do biurka

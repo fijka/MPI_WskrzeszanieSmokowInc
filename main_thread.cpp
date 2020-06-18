@@ -19,7 +19,8 @@ void mainLoop()
             info.mission = task_number;
             sleep(1);   // można wyrzucić na końcu
             for (int i = 1; i < size; i++) {
-                sendPacket(&info, i, MISSION_AD);
+	      //debug("sended %d", i);
+	      sendPacket(&info, i, MISSION_AD);
             }
             debug("Nowe zlecenie! Nowe zlecenie! [%d]", task_number);
             task_number++;
