@@ -7,10 +7,10 @@ void *startCommunicationThread(void *ptr)
     MPI_Status status;
 
     int ready = 0;
-
+    
     // PROFESJONALISTA: odbiór i segregacja otrzymanych wiadomości
     while (TRUE) {
-        MPI_Recv(&recvPacket, 1, MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+      MPI_Recv(&recvPacket, 1, MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 	lamport_time(lamport, recvPacket.timeLamport);
 	
         switch (status.MPI_TAG) {
@@ -34,10 +34,10 @@ void *startCommunicationThread(void *ptr)
 
             // informacja o dostępie do zlecenia innego profesjonalisty
             case MISSION_HAVE:
-                cooperators.push_back(status.MPI_SOURCE);
-                coop_mis.push_back(recvPacket);
-                if (status.MPI_SOURCE >= first and status.MPI_SOURCE <= last)
-                    missions[recvPacket.mission] = -1; // powinno być currentMission!
+	      //cooperators.push_back(status.MPI_SOURCE);
+	      //coop_mis.push_back(recvPacket);
+	      //if (status.MPI_SOURCE >= first and status.MPI_SOURCE <= last)
+	      //    missions[recvPacket.mission] = -1; // powinno być currentMission!
                 break;
             
             // ---------- DESK ----------
@@ -71,18 +71,18 @@ void *startCommunicationThread(void *ptr)
 
             // zgoda na dostęp do szieletu dla współpracowników
             case DRAGON_KILL:
-                changeState(dragon_have);
+	      // changeState(dragon_have);
                 break;
             
             // zakończenie wskrzeszania
             case DRAGON_READY:
-                ready += 1;
-                if (ready == 2) {
-                    debug("    [%d] Smok wskrzeszony! Dobra robota!", recvPacket.mission);
-                    ready = 0;
-                    dragonCount += 1;
-                    changeState(mission_wait);
-                }
+	      //ready += 1;
+	      //if (ready == 2) {
+	      //    debug("    [%d] Smok wskrzeszony! Dobra robota!", recvPacket.mission);
+	      //    ready = 0;
+	      //    dragonCount += 1;
+	      //    changeState(mission_wait);
+	      //}
                 break;
 
             // zwolnienie szkieletu
@@ -93,5 +93,5 @@ void *startCommunicationThread(void *ptr)
             default:
                 break;
         }
-    }
+	}
 }
