@@ -1,106 +1,137 @@
 #include "main.h"
 #include "communication_thread.h"
 
-/* wątek komunikacyjny: odbiór i segregacja otrzymanych przez profesjonalistów wiadomości*/
+/* wątek komunikacyjny: odbieranie wiadomości i reagowanie na nie */
 void *startCommunicationThread(void *ptr)
 {
     MPI_Status status;
+    myPacket.ts = lamport;
 
+    state = mission_wait;
+
+    int ackMission = 0;
+    int ackDesk = 0;
+    int ackDragon = 0;
+    int acceptedProf[2] = {0, 0};
     int ready = 0;
-    
-    // PROFESJONALISTA: odbiór i segregacja otrzymanych wiadomości
+
+    packet_t coop1, coop2;
+
+    // PROFESJONALISTA: reakcja na odebrane wiadomości
     while (TRUE) {
-      MPI_Recv(&recvPacket, sizeof(packet_t), MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-      ///debug("%d lamport", lamport);
-      //debug("lamport %d, id %d", recvPacket.timeLamport, recvPacket.id);
-      lamport_time(lamport, recvPacket.timeLamport);
-      //debug(" lamport po  %d", lamport);
+        MPI_Recv(&recvPacket, 1, MPI_PACKET_T, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+	    lamport_time(lamport, recvPacket.ts);
+    	myPacket.ts = lamport;
 	
         switch (status.MPI_TAG) {
-
-            // ---------- MISSION ----------
 
             // informacja o nowym zleceniu
             case MISSION_AD:
                 missions.push_back(recvPacket.mission);
                 break;
-            
+
+
             // prośba o dostęp do zlecenia
             case MISSION_REQ:
-	      debug("kkk");
-                pthread_mutex_lock(&requestMut);
-		debug("mojakka %d", recvPacket.id);
-                missionsReq->addPacket(recvPacket);
-                pthread_mutex_unlock(&requestMut);
+                if (state != mission_wait or recvPacket.data < dragonCount 
+		                or (recvPacket.time < requestTime and recvPacket.data ==  dragonCount)
+                        or (recvPacket.data == dragonCount and recvPacket.time == requestTime  and rank > status.MPI_SOURCE)) {
+                    sendedPacket.mission = recvPacket.mission;
+		            lamport += 1;
+		            myPacket.ts = lamport;
+			        sendedPacket.ts = myPacket.ts;
+                    sendPacket(&sendedPacket, status.MPI_SOURCE, MISSION_ACK);
+                } else {
+                    // tu  zrobic tablice ktora przechowuje req o  gorszym priorytecie 
+                }
                 break;
 
             // zgoda na otrzymanie zlecenia
             case MISSION_ACK:
-	      debug( "jfdvjkdb %d", recvPacket.id);
-                ackMission += 1;
-                // allAck->addPacket(recvPacket);
+                if (state == mission_wait) {
+                    ackMission += 1;
+		    //debug("get");
+                    if (ackMission == last - first) {
+                        ackMission = 0;
+			//debug("mission");
+                        changeState(mission_have);
+                    }
+                }
                 break;
 
             // informacja o dostępie do zlecenia innego profesjonalisty
             case MISSION_HAVE:
-	      //cooperators.push_back(status.MPI_SOURCE);
-	      //coop_mis.push_back(recvPacket);
-	      //if (status.MPI_SOURCE >= first and status.MPI_SOURCE <= last)
-	      //    missions[recvPacket.mission] = -1; // powinno być currentMission!
+                cooperators.push_back(status.MPI_SOURCE);
+                coop_mis.push_back(recvPacket);
+                if (status.MPI_SOURCE >= first and status.MPI_SOURCE <= last)
+                    missions[recvPacket.mission] = -1; // powinno być currentMission!
                 break;
-            
-            // ---------- DESK ----------
 
             // prośba o dostęp do biurka
             case DESK_REQ:
-                desksReq->addPacket(recvPacket);
-                break;
-            
-            // zgoda na dostęp do biurka
-            case DESK_ACK:
-                allAck->addPacket( recvPacket);
+                if ((state != desk_have and state != desk_wait)
+			            or (state == desk_wait and deskCount < recvPacket.data)
+                        or (state == desk_wait and lamport < recvPacket.ts and deskCount < recvPacket.data)
+                        or (state == desk_wait and deskCount < recvPacket.data and recvPacket.ts == lamport and rank > status.MPI_SOURCE)) {
+		            lamport += 1;
+		            myPacket.ts = lamport;
+                    sendPacket(&myPacket, status.MPI_SOURCE, DESK_ACK);
+                }
                 break;
 
-            // zwolnienie biurka
-            case DESK_RELEASE:
-                //desksReq[status.MPI_SOURCE - 1] = {-1, -1, -1};
+            // zgoda na dostęp do biurka
+            case DESK_ACK:
+                if (state = desk_wait) {
+                    ackDesk += 1;
+                    if (ackDesk >= size - 1 - DESKS) {
+                        ackDesk = 0;
+                        deskCount += 1;
+                        changeState(desk_have);
+                    }
+                }
                 break;
-            
-            // ---------- DRAGON ----------
 
             // prośba o dostęp do szkieletu
             case DRAGON_REQ:
-                //dragonsReq[status.MPI_SOURCE - 1] = recvPacket;
+                if ((state != dragon_have and state != dragon_wait)
+                        or (state == dragon_wait and lamport < recvPacket.ts)
+                        or (state == dragon_wait and recvPacket.ts == lamport and rank > status.MPI_SOURCE)) {
+		            lamport += 1;
+		            myPacket.ts = lamport;
+                    sendPacket(&myPacket, status.MPI_SOURCE, DRAGON_ACK);
+                }
                 break;
 
             // zgoda na dostęp do szkieletu
             case DRAGON_ACK:
-                //allAck[status.MPI_SOURCE - 1] = recvPacket;
+                if (state = dragon_wait) {
+                    ackDragon += 1; 
+                    if (ackDragon > size - 1 - 3 * DRAGONS) {
+                        ackDragon = 0;
+                        dragonCount += 1;
+                        changeState(dragon_have);
+                    }
+                }
                 break;
 
             // zgoda na dostęp do szieletu dla współpracowników
             case DRAGON_KILL:
-	      // changeState(dragon_have);
-                break;
-            
-            // zakończenie wskrzeszania
-            case DRAGON_READY:
-	      //ready += 1;
-	      //if (ready == 2) {
-	      //    debug("    [%d] Smok wskrzeszony! Dobra robota!", recvPacket.mission);
-	      //    ready = 0;
-	      //    dragonCount += 1;
-	      //    changeState(mission_wait);
-	      //}
+                changeState(dragon_have);
                 break;
 
-            // zwolnienie szkieletu
-            case DRAGON_RELEASE:
-                //dragonsReq[status.MPI_SOURCE - 1] = {-1, -1, -1};
+            // zakończenie wskrzeszania
+            case DRAGON_READY:
+                ready += 1;
+                if (ready == 2) {
+                    debug("[zlecenie %d czas %d] Smok wskrzeszony! Dobra robota!", recvPacket.mission, lamport);
+                    ready = 0;
+                    dragonCount += 1;
+                    changeState(mission_wait);
+                }
                 break;
 
             default:
                 break;
         }
-	}
+    }
 }

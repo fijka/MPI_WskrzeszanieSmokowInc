@@ -15,9 +15,9 @@
 #define TRUE 1
 #define FALSE 0
 
+#define HEAD 1
 #define BODY 1
-#define HEAD 3
-#define TAIL 3
+#define TAIL 1
 extern int DESKS;
 extern int DRAGONS;
 
@@ -34,37 +34,24 @@ extern int rank;
 extern int size;
 extern std::vector <int> missions, cooperators;
 extern std::vector <struct packet_t> coop_mis;
-extern int deskCount, dragonCount;
-extern int ackDesk, ackDragon;
+extern int deskCount;
+extern int dragonCount;
 extern int lamport;
 extern int first, last;
 extern int currentMission;
-extern int timeRequest;
-extern int ackMission;
-extern pthread_mutex_t requestMut;
+extern int requestTime;
 
 
 /* to może przeniesiemy do global... */
 struct packet_t {
-    int id;
     int mission;  /* id zlecenia */
-    int timeLamport;       /* timestamp (zegar lamporta) */
-    int timeRequest;
+    int ts;       /* timestamp (zegar lamporta) */
     int data;     /* przykładowe pole z danymi; można zmienić nazwę na bardziej pasującą */
-    packet_t *next = 0;
+    int time;
 };
-extern packet_t recvPacket, myPacket;
+extern MPI_Datatype MPI_PACKET_T;
 
-struct list {
-    packet_t *first;
-    void addPacket(packet_t packet);
-    void deletePacket(packet_t packet);
-    void deleteFirstPacket();
-    list();
-};
-
-extern list *allAck, *missionsReq, *desksReq, *dragonsReq;
-
+extern packet_t recvPacket, myPacket, sendedPacket;
 
 /* Typy wiadomości */
 #define MISSION_AD 1
@@ -77,8 +64,6 @@ extern list *allAck, *missionsReq, *desksReq, *dragonsReq;
 #define DRAGON_ACK 8
 #define DRAGON_KILL 9
 #define DRAGON_READY 10
-#define DRAGON_RELEASE 11
-#define DESK_RELEASE 12
 
 /* macro debug - działa jak printf, kiedy zdefiniowano
    DEBUG, kiedy DEBUG niezdefiniowane działa jak instrukcja pusta 
@@ -107,8 +92,5 @@ extern list *allAck, *missionsReq, *desksReq, *dragonsReq;
 void sendPacket(packet_t *pkt, int destination, int tag);
 void changeState( state_t );
 void lamport_time(int, int);
-//void list::addPacket(packet_t);
-//void list::deletePacket(packet_t);
-//void list::deleteFirstPacket();
 
 #endif
