@@ -10,8 +10,11 @@ void *startCommunicationThread(void *ptr)
     
     // PROFESJONALISTA: odbiór i segregacja otrzymanych wiadomości
     while (TRUE) {
-      MPI_Recv(&recvPacket, 1, MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-	lamport_time(lamport, recvPacket.timeLamport);
+      MPI_Recv(&recvPacket, sizeof(packet_t), MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+      ///debug("%d lam", lamport);
+      //debug("gosd %d, id %d", recvPacket.timeLamport, recvPacket.id);
+      lamport_time(lamport, recvPacket.timeLamport);
+      //debug(" jnngj %d", lamport);
 	
         switch (status.MPI_TAG) {
 
@@ -24,13 +27,16 @@ void *startCommunicationThread(void *ptr)
             
             // prośba o dostęp do zlecenia
             case MISSION_REQ:
+	      debug("kkk");
                 pthread_mutex_lock(&requestMut);
+		debug("mojakka %d", recvPacket.id);
                 missionsReq->addPacket(recvPacket);
                 pthread_mutex_unlock(&requestMut);
                 break;
 
             // zgoda na otrzymanie zlecenia
             case MISSION_ACK:
+	      debug( "jfdvjkdb %d", recvPacket.id);
                 ackMission += 1;
                 // allAck->addPacket(recvPacket);
                 break;

@@ -49,7 +49,7 @@ void mainLoop()
                     dragonReadySent = false;
 
                     if ((int)missions.size() > currentMission) {
-                        // debug("1");
+		      //debug("1");
 		                while (missions[currentMission] == -1) {
                              while ((int)missions.size() <= currentMission + 1) {}
                              currentMission += 1;
@@ -58,21 +58,25 @@ void mainLoop()
 
                         myPacket.mission = missions[currentMission];
                         
-                        // debug("2");
+                        //debug("2");
                         if (!missionReqSent) {
-                            // debug("3");
-                            lamport += 1;
+			  //debug("3");
+                            lamport++;
                             myPacket.timeRequest = lamport;
                             myPacket.timeLamport = lamport;
+			    timeRequest = lamport;
+			    
                             myPacket.data = dragonCount;
-
+			   
                             missionsReq->addPacket(myPacket);
 
                             for (int i = first; i <= last; i++) {
                                 if (i != rank) {
-                                    debug("%d cudzy %d", myPacket.id, i);
-                                    lamport += 1;
+				  //        debug("%d cudzy %d", myPacket.id, i);
+                                    lamport++;
                                     myPacket.timeLamport = lamport;
+				    //debug("cza swy sy %d",lamport);
+				    //debug("z packet %d", myPacket.timeLamport);
                                     sendPacket(&myPacket, i, MISSION_REQ);
                                 }
                             }
@@ -80,23 +84,28 @@ void mainLoop()
                         }
                     
 
-                        // debug("4");
-
-                        while (ackMission < last - first and missionsReq->first->id != rank) {
-                            pthread_mutex_lock(&requestMut);
-                            while (missionsReq->first->id =! rank) {
-                                // debug("5");
+			
+			if (missionsReq->first  != 0 ){
+			 
+			  while ((ackMission < (last - first)) and (missionsReq->first->id != myPacket.id ) ) {
+			    debug("54")
+			      //    pthread_mutex_lock(&requestMut);
+			    debug("g89");
+			  if(missionsReq->first != 0){
+                            while (missionsReq->first->id != rank) {
+			      //       debug("5");
                                 if (missionsReq->first->mission == missions[currentMission]) {
                                     sameMission = true;
                                 }
-                                lamport += 1;
+
+                                lamport++;
                                 myPacket.timeLamport = lamport;
                                 myPacket.mission = missionsReq->first->mission;
 
                                 sendPacket(&myPacket, missionsReq->first->id, MISSION_ACK);
                                 missionsReq->deleteFirstPacket();
-                            }
-                            pthread_mutex_unlock(&requestMut);
+                            }}
+			  //pthread_mutex_unlock(&requestMut);
                             if (sameMission == true) {
                                 currentMission += 1;
                                 sameMission = false;
@@ -104,6 +113,7 @@ void mainLoop()
                             }
                         }
                     }
+		    }
 
                     if (ackMission == last - first) {
                         ackMission = 0;

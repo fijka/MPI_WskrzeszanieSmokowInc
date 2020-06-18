@@ -80,6 +80,9 @@ void list::addPacket(packet_t packet)
             prev = tmp;
             tmp = tmp->next;
         } while(tmp->next);
+	if(tmp ==0){
+	  prev->next = newPacket;
+	}
     }
 }
 
@@ -105,8 +108,12 @@ void list::deletePacket(packet_t packet)
 
 void list::deleteFirstPacket()
 {
-    packet_t *tmp = first;
-    first = tmp->next;
+    packet_t *tmp= first;
+    if(first ->next){
+      first= tmp->next;
+    }else{
+        ;
+	}
 }
 
 
@@ -183,7 +190,7 @@ void sendPacket(packet_t *pkt, int destination, int tag)
         freepkt = 1;
     }
     // pkt->src = rank; //??
-    MPI_Send(pkt, 1, MPI_BYTE, destination, tag, MPI_COMM_WORLD);
+    MPI_Send(pkt, sizeof(packet_t), MPI_BYTE, destination, tag, MPI_COMM_WORLD);
     if (freepkt)
         free(pkt);
 }
