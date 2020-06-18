@@ -5,14 +5,13 @@
 void *startCommunicationThread(void *ptr)
 {
     MPI_Status status;
-    // myPacket.ts = lamport;
+
     int ready = 0;
 
     // PROFESJONALISTA: odbiór i segregacja otrzymanych wiadomości
     while (TRUE) {
-        MPI_Recv(&recvPacket, 1, MPI_PACKET_T, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-	    //lamport_time(lamport, recvPacket.ts);
-    	//myPacket.ts = lamport;
+        MPI_Recv(&recvPacket, 1, MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+	lamport_time(lamport, recvPacket.timeLamport);
 	
         switch (status.MPI_TAG) {
 
@@ -25,12 +24,12 @@ void *startCommunicationThread(void *ptr)
             
             // prośba o dostęp do zlecenia
             case MISSION_REQ:
-                missionsReq[status.MPI_SOURCE - 1] = recvPacket;
+                missionsReq->addPacket( recvPacket);
                 break;
 
             // zgoda na otrzymanie zlecenia
             case MISSION_ACK:
-                allAck[status.MPI_SOURCE - 1] = recvPacket;
+                allAck->addPacket( recvPacket) ;
                 break;
 
             // informacja o dostępie do zlecenia innego profesjonalisty
@@ -45,29 +44,29 @@ void *startCommunicationThread(void *ptr)
 
             // prośba o dostęp do biurka
             case DESK_REQ:
-                desksReq[status.MPI_SOURCE - 1] = recvPacket;
+                desksReq->addPacket(recvPacket);
                 break;
             
             // zgoda na dostęp do biurka
             case DESK_ACK:
-                allAck[status.MPI_SOURCE - 1] = recvPacket;
+                allAck->addPacket( recvPacket);
                 break;
 
             // zwolnienie biurka
             case DESK_RELEASE:
-                desksReq[status.MPI_SOURCE - 1] = {-1, -1, -1};
+                //desksReq[status.MPI_SOURCE - 1] = {-1, -1, -1};
                 break;
             
             // ---------- DRAGON ----------
 
             // prośba o dostęp do szkieletu
             case DRAGON_REQ:
-                dragonsReq[status.MPI_SOURCE - 1] = recvPacket;
+                //dragonsReq[status.MPI_SOURCE - 1] = recvPacket;
                 break;
 
             // zgoda na dostęp do szkieletu
             case DRAGON_ACK:
-                allAck[status.MPI_SOURCE - 1] = recvPacket;
+                //allAck[status.MPI_SOURCE - 1] = recvPacket;
                 break;
 
             // zgoda na dostęp do szieletu dla współpracowników
@@ -88,7 +87,7 @@ void *startCommunicationThread(void *ptr)
 
             // zwolnienie szkieletu
             case DRAGON_RELEASE:
-                dragonsReq[status.MPI_SOURCE - 1] = {-1, -1, -1};
+                //dragonsReq[status.MPI_SOURCE - 1] = {-1, -1, -1};
                 break;
 
             default:

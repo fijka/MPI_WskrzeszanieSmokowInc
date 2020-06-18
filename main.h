@@ -39,10 +39,8 @@ extern int ackDesk, ackDragon;
 extern int lamport;
 extern int first, last;
 extern int currentMission;
-extern packet_t missionsReq[HEAD + BODY + TAIL];
-extern packet_t desksReq[HEAD + BODY + TAIL];
-extern packet_t dragonsReq[HEAD + BODY + TAIL];
-extern packet_t allAck[HEAD + BODY + TAIL];
+extern int timeRequest;
+extern int ackMission;
 
 
 /* to może przeniesiemy do global... */
@@ -54,9 +52,18 @@ struct packet_t {
     int data;     /* przykładowe pole z danymi; można zmienić nazwę na bardziej pasującą */
     packet_t *next = 0;
 };
-extern MPI_Datatype MPI_PACKET_T;
-
 extern packet_t recvPacket, myPacket;
+
+struct list {
+    packet_t *first;
+    void addPacket(packet_t packet);
+    void deletePacket(packet_t packet);
+    void deleteFirstPacket();
+    list();
+};
+
+extern list *allAck, *missionsReq, *desksReq, *dragonsReq;
+
 
 /* Typy wiadomości */
 #define MISSION_AD 1
@@ -99,5 +106,8 @@ extern packet_t recvPacket, myPacket;
 void sendPacket(packet_t *pkt, int destination, int tag);
 void changeState( state_t );
 void lamport_time(int, int);
+//void list::addPacket(packet_t);
+//void list::deletePacket(packet_t);
+//void list::deleteFirstPacket();
 
 #endif

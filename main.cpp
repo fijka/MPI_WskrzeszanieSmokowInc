@@ -11,10 +11,7 @@ pthread_t threadCom;
 
 std::vector <int> missions, cooperators;
 std::vector <struct packet_t> coop_mis;
-packet_t missionsReq[HEAD + BODY + TAIL] = {{-1}};
-packet_t desksReq[HEAD + BODY + TAIL] = {{0}};
-packet_t dragonsReq[HEAD + BODY + TAIL] = {{0}};
-packet_t allAck[HEAD + BODY + TAIL] = {{0}};
+
 int deskCount = 0;
 int dragonCount = 0;
 int ackDesk = 0;
@@ -23,19 +20,20 @@ int lamport = 0;
 int first, last;
 int DESKS, DRAGONS;
 int currentMission = 0;
+int timeRequest =10000000;
+int ackMission = 0;
 packet_t recvPacket, myPacket;
 
 pthread_mutex_t stateMut = PTHREAD_MUTEX_INITIALIZER;
-
-struct list {
-    packet_t *first;
-    void addPacket(packet_t packet);
-    void deletePacket(packet_t packet);
-    list();
-};
 list::list() {
     first = 0;
 }
+
+
+list *allAck = new list;
+list *missionsReq = new list;
+list *desksReq = new list;
+list *dragonsReq = new list;
 
 void list::addPacket(packet_t packet)
 {
@@ -45,7 +43,7 @@ void list::addPacket(packet_t packet)
     newPacket->timeLamport = packet.timeLamport;
     newPacket->timeRequest = packet.timeRequest;
     newPacket->data = packet.data;
-    newPacket->next = packet.next;
+    newPacket->next = 0;
     
     if (first == 0) {
         first = newPacket;
@@ -53,30 +51,60 @@ void list::addPacket(packet_t packet)
         packet_t *tmp = first;
         packet_t *prev = first;
 
-        while(tmp->next) {
+        do {
             if (newPacket->data < tmp->data) {
                 if (tmp == first) {
                     newPacket->next = first;
                     first = newPacket;
+                    break;
                 } else {
                     prev->next = newPacket;
                     newPacket->next = tmp;
+                    break;
                 }
             } else if (newPacket->data == tmp->data) {
                 if (newPacket->timeRequest < tmp->timeRequest) {
                     prev->next = newPacket;
                     newPacket->next = tmp;
+                    break;
                 } else if (newPacket->timeRequest == tmp->timeRequest) {
                     if (newPacket->id < tmp->id) {
                         prev->next = newPacket;
                         newPacket->next = tmp;
+                        break;
                     }
                 }
             }
-            tmp = tmp->next;
             prev = tmp;
-        }
+            tmp = tmp->next;
+        } while(tmp->next);
     }
+}
+
+void list::deletePacket(packet_t packet)
+{
+    packet_t *tmp = first;
+    packet_t *prev = first;
+
+    do {
+        if (packet.id == tmp->id and packet.timeRequest == tmp->timeRequest) {
+            if (tmp == first) {
+                first = tmp->next;
+                break;
+            } else {
+                prev->next = tmp->next;
+                break;
+            }
+        }
+        prev = tmp;
+        tmp = tmp->next;
+    } while(tmp->next);
+}
+
+void list::deleteFirstPacket()
+{
+    packet_t *tmp = first;
+    first = tmp->next;
 }
 
 
@@ -110,20 +138,20 @@ void initialize(int *argc, char ***argv)
     MPI_Init_thread(argc, argv,MPI_THREAD_MULTIPLE, &provided);
     check_thread_support(provided);
 
-    const int nitems = 6;
-    int       blocklengths[6] = {1, 1, 1, 1, 1, 1};
-    MPI_Datatype typy[6] = {MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_PACKET_T};
+    // const int nitems = 6;
+    // int       blocklengths[6] = {1, 1, 1, 1, 1, 1};
+    // MPI_Datatype typy[6] = {MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_PACKET_T};
 
-    MPI_Aint offsets[6]; 
-    offsets[0] = offsetof(packet_t, id);
-    offsets[1] = offsetof(packet_t, mission);
-    offsets[2] = offsetof(packet_t, timeLamport);
-    offsets[3] = offsetof(packet_t, timeRequest);
-    offsets[4] = offsetof(packet_t, data);
-    offsets[5] = offsetof(packet_t, next);
+    // MPI_Aint offsets[6]; 
+    // offsets[0] = offsetof(packet_t, id);
+    // offsets[1] = offsetof(packet_t, mission);
+    // offsets[2] = offsetof(packet_t, timeLamport);
+    // offsets[3] = offsetof(packet_t, timeRequest);
+    // offsets[4] = offsetof(packet_t, data);
+    // offsets[5] = offsetof(packet_t, next);
 
-    MPI_Type_create_struct(nitems, blocklengths, offsets, typy, &MPI_PACKET_T);
-    MPI_Type_commit(&MPI_PACKET_T);
+    // MPI_Type_create_struct(nitems, blocklengths, offsets, typy, &MPI_PACKET_T);
+    // MPI_Type_commit(&MPI_PACKET_T);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -155,7 +183,7 @@ void finalize()
     /* Czekamy, aż wątek potomny się zakończy */
     printf("czekam na wątek \"komunikacyjny\"\n" );
     pthread_join(threadCom, NULL);
-    MPI_Type_free(&MPI_PACKET_T);
+    // MPI_Type_free(&MPI_PACKET_T);
     MPI_Finalize();
 }
 
@@ -168,7 +196,7 @@ void sendPacket(packet_t *pkt, int destination, int tag)
         freepkt = 1;
     }
     // pkt->src = rank; //??
-    MPI_Send(pkt, 1, MPI_PACKET_T, destination, tag, MPI_COMM_WORLD);
+    MPI_Send(pkt, 1, MPI_BYTE, destination, tag, MPI_COMM_WORLD);
     if (freepkt)
         free(pkt);
 }
