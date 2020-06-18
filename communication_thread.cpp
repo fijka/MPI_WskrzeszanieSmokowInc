@@ -11,10 +11,10 @@ void *startCommunicationThread(void *ptr)
     // PROFESJONALISTA: odbiór i segregacja otrzymanych wiadomości
     while (TRUE) {
       MPI_Recv(&recvPacket, sizeof(packet_t), MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-      ///debug("%d lam", lamport);
-      //debug("gosd %d, id %d", recvPacket.timeLamport, recvPacket.id);
+      ///debug("%d lamport", lamport);
+      //debug("lamport %d, id %d", recvPacket.timeLamport, recvPacket.id);
       lamport_time(lamport, recvPacket.timeLamport);
-      //debug(" jnngj %d", lamport);
+      //debug(" lamport po  %d", lamport);
 	
         switch (status.MPI_TAG) {
 
