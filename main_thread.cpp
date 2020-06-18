@@ -55,11 +55,11 @@ void mainLoop()
                         }
                         myPacket.mission = missions[currentMission];
                         if (!missionReqSent and myPacket.mission != -1) {
+			  lamport += 1;
+			  requestTime = lamport;
                             for (int i = first; i < last + 1; i++) {
                                 if (i != rank) {
 						lamport += 1;
-						requestTime = lamport;
-				                    lamport += 1;
 		    		                myPacket.ts = lamport;
 						myPacket.data = dragonCount;
 						myPacket.time = requestTime;
