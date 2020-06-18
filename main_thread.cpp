@@ -33,6 +33,7 @@ void mainLoop()
         bool dragonReqSent = false;
         bool dragonHaveSent = false;
         bool dragonReadySent = false;
+        bool sameMission = false;
         float sleepTime1 = 100000L+(long)((1e6-1e5)*rand()/(RAND_MAX+1.0));
         float sleepTime2 = 100000L+(long)((1e6-1e5)*rand()/(RAND_MAX+1.0));
         int coop = 0;
@@ -45,71 +46,90 @@ void mainLoop()
             switch (state) {
             
                 case mission_wait:
-		            while ( allAck->first != 0) {
-                        ackMission += 1;
-                        allAck->deleteFirstPacket();		
-		            }
-		     
-    		        if (ackMission == last - first) {
-			            changeState(mission_have);
-			            debug("talala");
-		            }
-		    
                     dragonReadySent = false;
 
                     if ((int)missions.size() > currentMission) {
-		                if (missions[currentMission] == -1) {
+                        // debug("1");
+		                while (missions[currentMission] == -1) {
                              while ((int)missions.size() <= currentMission + 1) {}
                              currentMission += 1;
                              missionReqSent = false;
                         }
-                         
-                        while (missionsReq->first != 0) {
-                            if (dragonCount > missionsReq->first->data or
-                            (dragonCount == missionsReq->first->data and timeRequest < missionsReq->first->timeRequest) or
-                            (dragonCount == missionsReq->first->data and timeRequest == missionsReq->first->timeRequest and rank > missionsReq->first->id)) {
-                                lamport += 1;
-                                myPacket.timeLamport = lamport;
-                                myPacket.mission = missionsReq->first->mission;
-                                sendPacket(&myPacket, missionsReq->first->id, MISSION_ACK);
-                                if( currentMission == missionsReq->first->mission) {
-                                    currentMission += 1;
-                                    missionReqSent  =  false;
-                                    ackMission = 0;
-                                }
-                                missionsReq->deleteFirstPacket();
-                            }
-                        }
-                
+
                         myPacket.mission = missions[currentMission];
-                
-                        if (!missionReqSent and myPacket.mission != -1) {
+                        
+                        // debug("2");
+                        if (!missionReqSent) {
+                            // debug("3");
                             lamport += 1;
                             myPacket.timeRequest = lamport;
+                            myPacket.timeLamport = lamport;
+                            myPacket.data = dragonCount;
+
+                            missionsReq->addPacket(myPacket);
+
                             for (int i = first; i <= last; i++) {
                                 if (i != rank) {
                                     debug("%d cudzy %d", myPacket.id, i);
                                     lamport += 1;
                                     myPacket.timeLamport = lamport;
-                                    myPacket.mission = missions[currentMission];
-                                    //sendPacket(&myPacket, i, MISSION_REQ);
+                                    sendPacket(&myPacket, i, MISSION_REQ);
                                 }
                             }
                             missionReqSent = true;
-                            if (first == last) {
-                                changeState(mission_have);
+                        }
+                    
+
+                        // debug("4");
+
+                        while (ackMission < last - first and missionsReq->first->id != rank) {
+                            pthread_mutex_lock(&requestMut);
+                            while (missionsReq->first->id =! rank) {
+                                // debug("5");
+                                if (missionsReq->first->mission == missions[currentMission]) {
+                                    sameMission = true;
+                                }
+                                lamport += 1;
+                                myPacket.timeLamport = lamport;
+                                myPacket.mission = missionsReq->first->mission;
+
+                                sendPacket(&myPacket, missionsReq->first->id, MISSION_ACK);
+                                missionsReq->deleteFirstPacket();
+                            }
+                            pthread_mutex_unlock(&requestMut);
+                            if (sameMission == true) {
+                                currentMission += 1;
+                                sameMission = false;
+                                break;
                             }
                         }
-			        }
+                    }
+
+                    if (ackMission == last - first) {
+                        ackMission = 0;
+                        changeState(mission_have);
+                        debug("zmieniam stan");
+                    }
+
+		            // while (allAck->first != 0) {
+                    //     ackMission += 1;
+                    //     allAck->deleteFirstPacket();		
+		            // }
+                    
+    		        // if (ackMission == last - first) {
+			        //     changeState(mission_have);
+			        //     debug("talala");
+		            // }
+
 		            break;
 
                 case mission_have:
-                    while(missionsReq->first != 0 ) {
-                        lamport += 1;
-                        myPacket.timeLamport = lamport;
-                        myPacket.mission = missionsReq->first->mission;
-                        sendPacket(&myPacket, missionsReq->first->id, MISSION_ACK);
-                    }
+                    // while(missionsReq->first != 0 ) {
+                    //     lamport += 1;
+                    //     myPacket.timeLamport = lamport;
+                    //     myPacket.mission = missionsReq->first->mission;
+                    //     sendPacket(&myPacket, missionsReq->first->id, MISSION_ACK);
+                    // }
 
                     // if (!missionHaveSent) {
                     //     for (int i = 1; i < size; i++) {

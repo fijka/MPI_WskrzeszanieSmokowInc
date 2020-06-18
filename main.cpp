@@ -25,6 +25,8 @@ int ackMission = 0;
 packet_t recvPacket, myPacket;
 
 pthread_mutex_t stateMut = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t requestMut = PTHREAD_MUTEX_INITIALIZER;
+
 list::list() {
     first = 0;
 }
@@ -138,21 +140,6 @@ void initialize(int *argc, char ***argv)
     MPI_Init_thread(argc, argv,MPI_THREAD_MULTIPLE, &provided);
     check_thread_support(provided);
 
-    // const int nitems = 6;
-    // int       blocklengths[6] = {1, 1, 1, 1, 1, 1};
-    // MPI_Datatype typy[6] = {MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_PACKET_T};
-
-    // MPI_Aint offsets[6]; 
-    // offsets[0] = offsetof(packet_t, id);
-    // offsets[1] = offsetof(packet_t, mission);
-    // offsets[2] = offsetof(packet_t, timeLamport);
-    // offsets[3] = offsetof(packet_t, timeRequest);
-    // offsets[4] = offsetof(packet_t, data);
-    // offsets[5] = offsetof(packet_t, next);
-
-    // MPI_Type_create_struct(nitems, blocklengths, offsets, typy, &MPI_PACKET_T);
-    // MPI_Type_commit(&MPI_PACKET_T);
-
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     srand(rank);
@@ -180,10 +167,10 @@ void initialize(int *argc, char ***argv)
 void finalize()
 {
     pthread_mutex_destroy(&stateMut);
+    pthread_mutex_destroy(&requestMut);
     /* Czekamy, aż wątek potomny się zakończy */
     printf("czekam na wątek \"komunikacyjny\"\n" );
     pthread_join(threadCom, NULL);
-    // MPI_Type_free(&MPI_PACKET_T);
     MPI_Finalize();
 }
 

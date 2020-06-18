@@ -24,12 +24,15 @@ void *startCommunicationThread(void *ptr)
             
             // prośba o dostęp do zlecenia
             case MISSION_REQ:
-                missionsReq->addPacket( recvPacket);
+                pthread_mutex_lock(&requestMut);
+                missionsReq->addPacket(recvPacket);
+                pthread_mutex_unlock(&requestMut);
                 break;
 
             // zgoda na otrzymanie zlecenia
             case MISSION_ACK:
-                allAck->addPacket( recvPacket) ;
+                ackMission += 1;
+                // allAck->addPacket(recvPacket);
                 break;
 
             // informacja o dostępie do zlecenia innego profesjonalisty

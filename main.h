@@ -41,6 +41,7 @@ extern int first, last;
 extern int currentMission;
 extern int timeRequest;
 extern int ackMission;
+extern pthread_mutex_t requestMut;
 
 
 /* to może przeniesiemy do global... */
