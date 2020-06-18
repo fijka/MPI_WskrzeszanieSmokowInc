@@ -72,11 +72,9 @@ void mainLoop()
 
                             for (int i = first; i <= last; i++) {
                                 if (i != rank) {
-				  //        debug("%d cudzy %d", myPacket.id, i);
+			
                                     lamport++;
                                     myPacket.timeLamport = lamport;
-				    //debug("cza swy sy %d",lamport);
-				    //debug("z packet %d", myPacket.timeLamport);
                                     sendPacket(&myPacket, i, MISSION_REQ);
                                 }
                             }
@@ -88,12 +86,12 @@ void mainLoop()
 			if (missionsReq->first  != 0 ){
 			 
 			  while ((ackMission < (last - first)) and (missionsReq->first->id != myPacket.id ) ) {
-			    debug("54")
+			    
 			      //    pthread_mutex_lock(&requestMut);
-			    debug("g89");
+			    
 			  if(missionsReq->first != 0){
                             while (missionsReq->first->id != rank) {
-			      //       debug("5");
+			      
                                 if (missionsReq->first->mission == missions[currentMission]) {
                                     sameMission = true;
                                 }
