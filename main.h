@@ -15,9 +15,9 @@
 #define TRUE 1
 #define FALSE 0
 
-#define HEAD 3
-#define BODY 3
-#define TAIL 3
+#define HEAD 1
+#define BODY 1
+#define TAIL 1
 extern int DESKS;
 extern int DRAGONS;
 
@@ -40,7 +40,7 @@ extern int lamport;
 extern int first, last;
 extern int currentMission;
 extern int requestTime;
-
+extern packet_t reqTab[HEAD + BODY + TAIL];
 
 /* to może przeniesiemy do global... */
 struct packet_t {
@@ -51,7 +51,7 @@ struct packet_t {
 };
 extern MPI_Datatype MPI_PACKET_T;
 
-extern packet_t recvPacket, myPacket, sendedPacket;
+extern packet_t myPacket;
 
 /* Typy wiadomości */
 #define MISSION_AD 1

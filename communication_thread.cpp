@@ -6,6 +6,7 @@ void *startCommunicationThread(void *ptr)
 {
     MPI_Status status;
     myPacket.ts = lamport;
+    packet_t recvPacket, sendedPacket;
 
     state = mission_wait;
 
@@ -33,16 +34,17 @@ void *startCommunicationThread(void *ptr)
 
             // prośba o dostęp do zlecenia
             case MISSION_REQ:
-                if (state != mission_wait or recvPacket.data < dragonCount 
-		                or (recvPacket.time < requestTime and recvPacket.data ==  dragonCount)
-                        or (recvPacket.data == dragonCount and recvPacket.time == requestTime  and rank > status.MPI_SOURCE)) {
+                if (recvPacket.mission != missions[currentMission] or
+                        state != mission_wait or recvPacket.data < dragonCount or
+                        (recvPacket.time < requestTime and recvPacket.data ==  dragonCount) or
+                        (recvPacket.data == dragonCount and recvPacket.time == requestTime  and rank > status.MPI_SOURCE)) {
                     sendedPacket.mission = recvPacket.mission;
 		            lamport += 1;
 		            myPacket.ts = lamport;
 			        sendedPacket.ts = myPacket.ts;
                     sendPacket(&sendedPacket, status.MPI_SOURCE, MISSION_ACK);
                 } else {
-                    // tu  zrobic tablice ktora przechowuje req o  gorszym priorytecie 
+                    reqTab[status.MPI_SOURCE] = recvPacket;
                 }
                 break;
 
@@ -50,10 +52,8 @@ void *startCommunicationThread(void *ptr)
             case MISSION_ACK:
                 if (state == mission_wait) {
                     ackMission += 1;
-		    //debug("get");
                     if (ackMission == last - first) {
                         ackMission = 0;
-			//debug("mission");
                         changeState(mission_have);
                     }
                 }

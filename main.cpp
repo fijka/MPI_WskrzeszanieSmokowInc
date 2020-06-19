@@ -18,7 +18,8 @@ int first, last;
 int DESKS, DRAGONS;
 int currentMission = 0;
 int requestTime;
-packet_t recvPacket, myPacket, sendedPacket;
+packet_t myPacket;
+packet_t reqTab[HEAD + BODY + TAIL] = {{-1}};
 
 pthread_mutex_t stateMut = PTHREAD_MUTEX_INITIALIZER;
 
