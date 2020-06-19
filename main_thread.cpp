@@ -81,7 +81,7 @@ void mainLoop()
                                     pthread_mutex_lock(&ackMut);
                                     ackMission = 0;
                                     pthread_mutex_unlock(&ackMut);
-				    debug("[%d] REQ do %d", myPacket.mission, i);
+				    //				    debug("[%d] REQ do %d", myPacket.mission, i);
                                     sendPacket(&myPacket, i, MISSION_REQ);
                                 }
                             }
