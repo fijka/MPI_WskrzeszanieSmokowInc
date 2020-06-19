@@ -42,13 +42,26 @@ void mainLoop()
         int coop = 0;
         int c1, c2;
         int tmp = 0;
+        int tmp2 = 0;
         bool deskBoy = false;
+        bool iter = false;
 
         while (TRUE) {
             switch (state) {
                 case mission_wait:
                     dragonReadySent = false;
-		    if ((int)missions.size() > currentMission) {
+                    if ((int)missions.size() > currentMission) {
+
+                        for (int i = tmp2; i < (int)coop_mis.size(); i++) {
+                            if (coop_mis[i].mission < (int)missions.size() and cooperators[i] >= first and cooperators[i] <= last) {
+                                missions[coop_mis[i].mission] = -1;
+                                if (iter == false) tmp2++;
+                            } else {
+                                iter = true;
+                            }
+                        }
+                        iter = false;
+
                         if (missions[currentMission] == -1) {
                             while ((int)missions.size() <= currentMission + 1) {}
                             currentMission += 1;
@@ -56,14 +69,14 @@ void mainLoop()
                         }
                         myPacket.mission = missions[currentMission];
                         if (!missionReqSent and myPacket.mission != -1) {
-			  lamport += 1;
-			  requestTime = lamport;
+			            lamport += 1;
+			            requestTime = lamport;
                             for (int i = first; i < last + 1; i++) {
                                 if (i != rank) {
-						lamport += 1;
+						            lamport += 1;
 		    		                myPacket.ts = lamport;
-						myPacket.data = dragonCount;
-						myPacket.time = requestTime;
+                                    myPacket.data = dragonCount;
+                                    myPacket.time = requestTime;
                                     sendPacket(&myPacket, i, MISSION_REQ);
                                 }
                             }
