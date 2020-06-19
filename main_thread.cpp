@@ -128,24 +128,47 @@ void mainLoop()
                             if (coop_mis[tmp].mission == missions[currentMission]) {
                                 coop++;
                                 if (coop == 1) {
+					debug("coop1");
                                     c1 = tmp;
                                 }
                                 else {
+					debug("coop2");
                                     c2 = tmp;
                                     debug("[zlecenie %d, czas %d] Biorę zlecenie z %d i %d", missions[currentMission], lamport, cooperators[c1], cooperators[c2]);
                                     if (deskCount < coop_mis[c1].data and deskCount < coop_mis[c2].data) {
-                                        changeState(desk_wait);
+				      debug("blad 1");
+				      changeState(desk_wait);
                                     } else if (deskCount > coop_mis[c1].data or deskCount > coop_mis[c2].data) {
-                                        changeState(cooperator_wait);
+				      debug("blad 2");
+				      changeState(cooperator_wait);
                                     } else if (deskCount == coop_mis[c1].data and deskCount == coop_mis[c2].data) {
-                                        if (rank < cooperators[c1] and rank < cooperators[c2]) changeState(desk_wait);
-                                        else changeState(cooperator_wait);
-                                    } else if (deskCount == coop_mis[c1].data) {
-                                        if (rank < cooperators[c1]) changeState(desk_wait);
-                                        else changeState(cooperator_wait);
-                                    } else if (deskCount == coop_mis[c2].data) {
-                                        if (rank < cooperators[c2]) changeState(desk_wait);
-                                        else changeState(cooperator_wait);
+				      if (rank < cooperators[c1] and rank < cooperators[c2]) {
+					debug("blad 3");
+					changeState(desk_wait);
+				      }
+				      else {
+					debug("blad 4");
+					changeState(cooperator_wait);
+				      	debug("duoa");
+				      }
+                                    } else if (deskCount == coop_mis[c1].data and deskCount < coop_mis[c2].data) {
+				      if (rank < cooperators[c1]) {
+					debug("bald 5");
+					changeState(desk_wait);
+				      }
+				      else {
+					debug("blad 6");
+					changeState(cooperator_wait);
+				      }
+                                    } else if (deskCount == coop_mis[c2].data and deskCount < coop_mis[c1].data) {
+				      if (rank < cooperators[c2]) {
+					debug("blad 7");
+					changeState(desk_wait);
+				      }
+				      else {
+					debug("blad 8");
+					changeState(cooperator_wait);
+				      }
                                     }
                                 }
                             }
@@ -156,13 +179,15 @@ void mainLoop()
                     break;
                 
                 case desk_wait:
-                    missionHaveSent = false;
+		  //		  debug("stan desk_wait");
+		  missionHaveSent = false;
                     tmp = 0;
                     deskBoy = true;
                     coop = 0;
 
                     if (!deskReqSent) {
-                        lamport +=1;
+		      debug("stan desk_wait");
+		      lamport +=1;
                         requestTime = lamport;
                         for (int i = 1; i < size; i ++)
 			            {
