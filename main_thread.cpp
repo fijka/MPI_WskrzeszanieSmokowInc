@@ -81,7 +81,7 @@ void mainLoop()
                                     pthread_mutex_lock(&ackMut);
                                     ackMission = 0;
                                     pthread_mutex_unlock(&ackMut);
-
+				    debug("[%d] REQ do %d", myPacket.mission, i);
                                     sendPacket(&myPacket, i, MISSION_REQ);
                                 }
                             }
@@ -173,7 +173,7 @@ void mainLoop()
                     break;
                 
                 case desk_have:
-                    debug("[zlecenie %d czas %d] Jestem w gildii, czekajcie!", missions[currentMission], lamport);
+                    debug("  [zlecenie %d czas %d] Jestem w gildii, czekajcie!", missions[currentMission], lamport);
                     deskReqSent = false;
                     // sleep
 		            usleep(sleepTime1);                
@@ -203,7 +203,7 @@ void mainLoop()
                     dragonReqSent = false;
                     if (!dragonHaveSent and deskBoy) {
                         dragonHaveSent = true;
-                        debug("[zlecenie %d czas %d] Mam szkielet! Chodźcie!", missions[currentMission], lamport);
+                        debug("    [zlecenie %d czas %d] Mam szkielet! Chodźcie!", missions[currentMission], lamport);
                         sendPacket(&myPacket, cooperators[c1], DRAGON_KILL);
                         sendPacket(&myPacket, cooperators[c2], DRAGON_KILL);
                     }

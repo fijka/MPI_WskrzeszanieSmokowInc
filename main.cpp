@@ -78,15 +78,15 @@ void initialize(int *argc, char ***argv)
 
         // znalezienie procesów o tej samej profesji
         if (rank > HEAD + BODY) {
-            debug("ogon");
+            //debug("ogon");
             first = HEAD + BODY + 1;
             last = HEAD + BODY + TAIL;
         } else if (rank > HEAD) {
-            debug("ciało");
+            //debug("ciało");
             first = HEAD + 1;
             last = HEAD + BODY;
         } else {
-            debug("głowa");
+            //debug("głowa");
             first = 1;
             last = HEAD;
         }

@@ -33,14 +33,14 @@ void *startCommunicationThread(void *ptr)
 
             // prośba o dostęp do zlecenia
             case MISSION_REQ:
-                if (recvPacket.mission != missions[currentMission] or
+	      if (recvPacket.mission != missions[currentMission] or
                         state != mission_wait or recvPacket.data < dragonCount or
                         (recvPacket.time < requestTime and recvPacket.data ==  dragonCount) or
                         (recvPacket.data == dragonCount and recvPacket.time == requestTime  and rank > status.MPI_SOURCE)) {
                     sendedPacket.mission = recvPacket.mission;
 		            lamport += 1;
                     sendedPacket.ts = lamport;
-                    debug("wysylam ack od %d", status.MPI_SOURCE);
+                    debug("wysylam ack [%d] do %d", sendedPacket.mission, status.MPI_SOURCE);
                     sendPacket(&sendedPacket, status.MPI_SOURCE, MISSION_ACK);
                 } else {
                     reqTab[status.MPI_SOURCE] = recvPacket;
@@ -52,7 +52,7 @@ void *startCommunicationThread(void *ptr)
                 if (state == mission_wait and recvPacket.mission == missions[currentMission]) {
                     pthread_mutex_lock(&ackMut);
                     ackMission += 1;
-		            debug(" ack od %d", status.MPI_SOURCE)
+		    debug("[%d] ack od %d", recvPacket.mission, status.MPI_SOURCE)
                     if (ackMission == last - first) {
                         changeState(mission_have);
                     }
@@ -122,7 +122,7 @@ void *startCommunicationThread(void *ptr)
             case DRAGON_READY:
                 ready += 1;
                 if (ready == 2) {
-                    debug("[zlecenie %d czas %d] Smok wskrzeszony! Dobra robota!", recvPacket.mission, lamport);
+                    debug("      [zlecenie %d czas %d] Smok wskrzeszony! Dobra robota!", recvPacket.mission, lamport);
                     ready = 0;
                     dragonCount += 1;
                     changeState(mission_wait);
