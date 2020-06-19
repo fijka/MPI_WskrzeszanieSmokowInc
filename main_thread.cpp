@@ -122,6 +122,7 @@ void mainLoop()
                         }
                         missionHaveSent = true;
                     }
+
                     while (coop != 2) {
                         if (coop_mis.size() >= tmp + 1) {
                             if (coop_mis[tmp].mission == missions[currentMission]) {
@@ -159,12 +160,18 @@ void mainLoop()
                     tmp = 0;
                     deskBoy = true;
                     coop = 0;
+
                     if (!deskReqSent) {
+                        lamport +=1;
+                        requestTime = lamport;
                         for (int i = 1; i < size; i ++)
 			            {
-                            if (rank != i) {
+                            
+                            if (rank != i and cooperators[c1] != rank and cooperators[c2] != rank) {
                                 lamport += 1;
                                 myPacket.ts = lamport;
+                                myPacket.time = requestTime;
+                                myPacket.data = deskCount;
                                 sendPacket(&myPacket, i, DESK_REQ);
                             }
 			            }
@@ -178,6 +185,13 @@ void mainLoop()
                     // sleep
 		            usleep(sleepTime1);                
                     changeState(dragon_wait);
+                    for (int i = 1; i < size; i++) {
+                        if (reqTab[i].mission != -1 and i != rank) {
+                            lamport++; 
+                            myPacket.ts = lamport;
+                            sendPacket(&myPacket, i, DESK_ACK);
+                        }
+                    }
                     break;
 
                 case cooperator_wait:
@@ -187,13 +201,19 @@ void mainLoop()
                     break;
                 
                 case dragon_wait:
+
                     if (!dragonReqSent) {
+                        lamport +=1;
+                        requestTime= lamport;
                         for (int i = 1; i < size; i++)
 			            {
-                            if (rank != i)
-				            lamport += 1;
-		    		        myPacket.ts = lamport;
-                            sendPacket(&myPacket, i, DRAGON_REQ);
+                            if (rank != i and rank != cooperators[c1] and rank != cooperators[c2]) {
+                                lamport += 1;
+                                myPacket.ts = lamport;
+                                myPacket.time = requestTime;
+                                myPacket.data = dragonCount;
+                                sendPacket(&myPacket, i, DRAGON_REQ);
+                            }
 			            }
                         dragonReqSent = true;
                     }

@@ -64,7 +64,7 @@ void *startCommunicationThread(void *ptr)
                 //debug("wysylam ack [%d] do %d,  warunek 5 -----", sendedPacket.mission, status.MPI_SOURCE);
                 sendPacket(&sendedPacket, status.MPI_SOURCE, MISSION_ACK);
                 } else {
-                    reqTab[status.MPI_SOURCE] = recvPacket;
+                    //reqTab[status.MPI_SOURCE] = recvPacket;
                 }
                 break;
 
@@ -90,12 +90,14 @@ void *startCommunicationThread(void *ptr)
             // prośba o dostęp do biurka
             case DESK_REQ:
                 if ((state != desk_have and state != desk_wait)
-			            or (state == desk_wait and deskCount < recvPacket.data)
-                        or (state == desk_wait and lamport < recvPacket.ts and deskCount < recvPacket.data)
-                        or (state == desk_wait and deskCount < recvPacket.data and recvPacket.ts == lamport and rank > status.MPI_SOURCE)) {
+			            or (state == desk_wait and deskCount > recvPacket.data)
+                        or (state == desk_wait and requestTime > recvPacket.time and deskCount == recvPacket.data)
+                        or (state == desk_wait and deskCount == recvPacket.data and recvPacket.time == requestTime and rank > status.MPI_SOURCE)) {
 		            lamport += 1;
 		            myPacket.ts = lamport;
                     sendPacket(&myPacket, status.MPI_SOURCE, DESK_ACK);
+                }else{
+                    reqTab[status.MPI_SOURCE] = recvPacket;
                 }
                 break;
 
@@ -103,10 +105,10 @@ void *startCommunicationThread(void *ptr)
             case DESK_ACK:
                 if (state = desk_wait) {
                     ackDesk += 1;
-                    if (ackDesk >= size - 1 - DESKS) {
-                        ackDesk = 0;
+                    if (ackDesk >= size - 1 - DESKS - 2) {
                         deskCount += 1;
                         changeState(desk_have);
+                        ackDesk = 0;
                     }
                 }
                 break;
@@ -114,11 +116,14 @@ void *startCommunicationThread(void *ptr)
             // prośba o dostęp do szkieletu
             case DRAGON_REQ:
                 if ((state != dragon_have and state != dragon_wait)
-                        or (state == dragon_wait and lamport < recvPacket.ts)
-                        or (state == dragon_wait and recvPacket.ts == lamport and rank > status.MPI_SOURCE)) {
+                        or (state == dragon_wait and dragonCount > recvPacket.data)
+                        or (state == dragon_wait and recvPacket.data == dragonCount and recvPacket.time < requestTime)
+                        or (state == dragon_wait and dragonCount ==recvPacket.data and recvPacket.time == requestTime and rank > status.MPI_SOURCE)) {
 		            lamport += 1;
 		            myPacket.ts = lamport;
                     sendPacket(&myPacket, status.MPI_SOURCE, DRAGON_ACK);
+                } else {
+                    dragTab[status.MPI_SOURCE] = recvPacket;
                 }
                 break;
 
@@ -126,10 +131,10 @@ void *startCommunicationThread(void *ptr)
             case DRAGON_ACK:
                 if (state = dragon_wait) {
                     ackDragon += 1; 
-                    if (ackDragon > size - 1 - 3 * DRAGONS) {
-                        ackDragon = 0;
+                    if (ackDragon > size - 1 - DRAGONS - 2) {
                         dragonCount += 1;
                         changeState(dragon_have);
+                        ackDragon = 0;
                     }
                 }
                 break;
@@ -147,6 +152,13 @@ void *startCommunicationThread(void *ptr)
                     ready = 0;
                     dragonCount += 1;
                     changeState(mission_wait);
+                    for (int i = 1; i < size; i++) {
+                        if (dragTab[i].mission != -1 and i != rank) {
+                            lamport++; 
+                            myPacket.ts = lamport;
+                            sendPacket(&myPacket, i, DRAGON_ACK);
+                        }
+                    }
                 }
                 break;
 

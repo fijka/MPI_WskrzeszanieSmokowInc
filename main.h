@@ -40,8 +40,9 @@ extern int lamport;
 extern int first, last;
 extern int currentMission;
 extern int requestTime;
-extern packet_t reqTab[HEAD + BODY + TAIL];
-extern pthread_mutex_t ackMut;
+extern packet_t reqTab[HEAD + BODY + TAIL + 1];
+extern packet_t dragTab[HEAD + BODY + TAIL + 1];
+extern pthread_mutex_t ackMut, ackDesk, ackDragon;
 extern int ackMission;
 
 

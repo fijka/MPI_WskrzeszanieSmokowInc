@@ -21,10 +21,14 @@ int requestTime;
 int ackMission = 0;
 
 packet_t myPacket;
-packet_t reqTab[HEAD + BODY + TAIL] = {{-1}};
+packet_t reqTab[HEAD + BODY + TAIL + 1] = {{-1}};
+packet_t dragTab[HEAD + BODY + TAIL + 1] = {{-1}};
+
 
 pthread_mutex_t stateMut = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t ackMut = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t ackDesk = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t ackDragon = PTHREAD_MUTEX_INITIALIZER;
 
 
 /* sprawdzenie działania wątków */
