@@ -48,8 +48,9 @@ void *startCommunicationThread(void *ptr)
 
             // zgoda na otrzymanie zlecenia
             case MISSION_ACK:
-                if (state == mission_wait) {
+                if (state == mission_wait and recvPacket.mission == missions[currentMission]) {
                     ackMission += 1;
+		    debug(" ack od %d", status.MPI_SOURCE)
                     if (ackMission == last - first) {
                         ackMission = 0;
                         changeState(mission_have);
