@@ -40,8 +40,6 @@ void *startCommunicationThread(void *ptr)
                         (recvPacket.data == dragonCount and recvPacket.time == requestTime  and rank > status.MPI_SOURCE)) {
                     sendedPacket.mission = recvPacket.mission;
 		            lamport += 1;
-		            myPacket.ts = lamport;
-			        sendedPacket.ts = myPacket.ts;
                     sendPacket(&sendedPacket, status.MPI_SOURCE, MISSION_ACK);
                 } else {
                     reqTab[status.MPI_SOURCE] = recvPacket;
@@ -63,8 +61,6 @@ void *startCommunicationThread(void *ptr)
             case MISSION_HAVE:
                 cooperators.push_back(status.MPI_SOURCE);
                 coop_mis.push_back(recvPacket);
-                if (status.MPI_SOURCE >= first and status.MPI_SOURCE <= last)
-                    missions[currentMission] = -1; // powinno być currentMission!
                 break;
 
             // prośba o dostęp do biurka
