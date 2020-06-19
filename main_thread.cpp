@@ -77,6 +77,11 @@ void mainLoop()
 		    		                myPacket.ts = lamport;
                                     myPacket.data = dragonCount;
                                     myPacket.time = requestTime;
+    
+                                    pthread_mutex_lock(&ackMut);
+                                    ackMission = 0;
+                                    pthread_mutex_unlock(&ackMut);
+
                                     sendPacket(&myPacket, i, MISSION_REQ);
                                 }
                             }
@@ -89,21 +94,21 @@ void mainLoop()
                     break;
 
                 case mission_have:
-                    for (int i = 0; i < HEAD + BODY + TAIL; i++) {
-                        if (reqTab[i].mission != -1) {
-                            if (reqTab[i].mission != missions[currentMission] or
-                                    reqTab[i].data < dragonCount or
-                                    (reqTab[i].time < requestTime and reqTab[i].data ==  dragonCount) or
-                                    (reqTab[i].data == dragonCount and reqTab[i].time == requestTime  and rank > i + 1)) {
-                                sendedPacket.mission = reqTab[i].mission;
-                                lamport += 1;
-                                myPacket.ts = lamport;
-                                sendedPacket.ts = myPacket.ts;
-                                sendPacket(&sendedPacket, i + 1, MISSION_ACK);
-                                reqTab[i].mission = -1;
-                            }
-                        }
-                    }
+                    // for (int i = 0; i < HEAD + BODY + TAIL; i++) {
+                    //     if (reqTab[i].mission != -1) {
+                    //         if (reqTab[i].mission != missions[currentMission] or
+                    //                 reqTab[i].data < dragonCount or
+                    //                 (reqTab[i].time < requestTime and reqTab[i].data ==  dragonCount) or
+                    //                 (reqTab[i].data == dragonCount and reqTab[i].time == requestTime  and rank > i + 1)) {
+                    //             sendedPacket.mission = reqTab[i].mission;
+                    //             lamport += 1;
+                    //             myPacket.ts = lamport;
+                    //             sendedPacket.ts = myPacket.ts;
+                    //             sendPacket(&sendedPacket, i + 1, MISSION_ACK);
+                    //             reqTab[i].mission = -1;
+                    //         }
+                    //     }
+                    // }
 
                     if (!missionHaveSent) {
                         for (int i = 1; i < size; i++) {

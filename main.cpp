@@ -18,10 +18,13 @@ int first, last;
 int DESKS, DRAGONS;
 int currentMission = 0;
 int requestTime;
+int ackMission = 0;
+
 packet_t myPacket;
 packet_t reqTab[HEAD + BODY + TAIL] = {{-1}};
 
 pthread_mutex_t stateMut = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t ackMut = PTHREAD_MUTEX_INITIALIZER;
 
 
 /* sprawdzenie działania wątków */
@@ -74,20 +77,23 @@ void initialize(int *argc, char ***argv)
     if (rank != 0) {
 
         // znalezienie procesów o tej samej profesji
-        if (rank < HEAD + 1) {
-            first = 1;
-            last = HEAD;
-        } else if (rank > HEAD && rank < HEAD + BODY + 1) {
+        if (rank > HEAD + BODY) {
+            debug("ogon");
+            first = HEAD + BODY + 1;
+            last = HEAD + BODY + TAIL;
+        } else if (rank > HEAD) {
+            debug("ciało");
             first = HEAD + 1;
             last = HEAD + BODY;
         } else {
-            first = HEAD + BODY + 1;
-            last = HEAD + BODY + TAIL;
+            debug("głowa");
+            first = 1;
+            last = HEAD;
         }
 
         pthread_create(&threadCom, NULL, startCommunicationThread, 0);
     }
-    debug("Melduję się!");
+    debug("Melduję się! rank: %d first: %d last: %d", rank, first, last);
 }
 
 /* zwolnienie zasobów oraz zakończenie pracy MPI */

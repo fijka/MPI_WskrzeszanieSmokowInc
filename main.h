@@ -41,6 +41,9 @@ extern int first, last;
 extern int currentMission;
 extern int requestTime;
 extern packet_t reqTab[HEAD + BODY + TAIL];
+extern pthread_mutex_t ackMut;
+extern int ackMission;
+
 
 /* to może przeniesiemy do global... */
 struct packet_t {

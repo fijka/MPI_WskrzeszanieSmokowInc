@@ -10,7 +10,6 @@ void *startCommunicationThread(void *ptr)
 
     state = mission_wait;
 
-    int ackMission = 0;
     int ackDesk = 0;
     int ackDragon = 0;
     int acceptedProf[2] = {0, 0};
@@ -40,6 +39,8 @@ void *startCommunicationThread(void *ptr)
                         (recvPacket.data == dragonCount and recvPacket.time == requestTime  and rank > status.MPI_SOURCE)) {
                     sendedPacket.mission = recvPacket.mission;
 		            lamport += 1;
+                    sendedPacket.ts = lamport;
+                    debug("wysylam ack od %d", status.MPI_SOURCE);
                     sendPacket(&sendedPacket, status.MPI_SOURCE, MISSION_ACK);
                 } else {
                     reqTab[status.MPI_SOURCE] = recvPacket;
@@ -49,12 +50,13 @@ void *startCommunicationThread(void *ptr)
             // zgoda na otrzymanie zlecenia
             case MISSION_ACK:
                 if (state == mission_wait and recvPacket.mission == missions[currentMission]) {
+                    pthread_mutex_lock(&ackMut);
                     ackMission += 1;
-		    debug(" ack od %d", status.MPI_SOURCE)
+		            debug(" ack od %d", status.MPI_SOURCE)
                     if (ackMission == last - first) {
-                        ackMission = 0;
                         changeState(mission_have);
                     }
+                    pthread_mutex_unlock(&ackMut);
                 }
                 break;
 
