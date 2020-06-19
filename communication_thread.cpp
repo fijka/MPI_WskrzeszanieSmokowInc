@@ -76,6 +76,7 @@ void *startCommunicationThread(void *ptr)
 		    //  debug("[%d] ack od %d", recvPacket.mission, status.MPI_SOURCE)
                     if (ackMission == last - first) {
                         changeState(mission_have);
+			ackMission = 0;
                     }
                     pthread_mutex_unlock(&ackMut);
                 }

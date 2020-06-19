@@ -18,7 +18,7 @@ void mainLoop()
          	//float sleepTime = 1000000L;
 		    usleep(sleepTime);                
             info.mission = task_number;
-            sleep(1);   // można wyrzucić na końcu
+//            sleep(1);   // można wyrzucić na końcu
             for (int i = 1; i < size; i++) {
 	      //debug("sended %d", i);
 	      sendPacket(&info, i, MISSION_AD);
@@ -223,6 +223,7 @@ void mainLoop()
                     missionHaveSent = false;
                     coop = 0;
                     tmp = 0;
+		    sleep(1);
                     break;
                 
                 case dragon_wait:
