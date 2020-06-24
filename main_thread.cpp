@@ -18,7 +18,7 @@ void mainLoop()
          	//float sleepTime = 1000000L;
 		    usleep(sleepTime);                
             info.mission = task_number;
-//            sleep(1);   // można wyrzucić na końcu
+           sleep(1);   // można wyrzucić na końcu
             for (int i = 1; i < size; i++) {
 	      //debug("sended %d", i);
 	      sendPacket(&info, i, MISSION_AD);
@@ -50,8 +50,8 @@ void mainLoop()
             switch (state) {
                 case mission_wait:
                     dragonReadySent = false;
+                    sleep(1);
                     if ((int)missions.size() > currentMission) {
-
                         for (int i = tmp2; i < (int)coop_mis.size(); i++) {
                             if (coop_mis[i].mission < (int)missions.size() and cooperators[i] >= first and cooperators[i] <= last) {
                                 missions[coop_mis[i].mission] = -1;
@@ -61,7 +61,6 @@ void mainLoop()
                             }
                         }
                         iter = false;
-
                         if (missions[currentMission] == -1) {
                             while ((int)missions.size() <= currentMission + 1) {}
                             currentMission += 1;
@@ -69,19 +68,18 @@ void mainLoop()
                         }
                         myPacket.mission = missions[currentMission];
                         if (!missionReqSent and myPacket.mission != -1) {
-			            lamport += 1;
-			            requestTime = lamport;
+                            lamport += 1;
+                            requestTime = lamport;
                             for (int i = first; i < last + 1; i++) {
                                 if (i != rank) {
 						            lamport += 1;
 		    		                myPacket.ts = lamport;
                                     myPacket.data = dragonCount;
                                     myPacket.time = requestTime;
-    
                                     pthread_mutex_lock(&ackMut);
                                     ackMission = 0;
                                     pthread_mutex_unlock(&ackMut);
-				    //				    debug("[%d] REQ do %d", myPacket.mission, i);
+				                    debug("[%d] REQ do %d", myPacket.mission, i);
                                     sendPacket(&myPacket, i, MISSION_REQ);
                                 }
                             }
@@ -128,47 +126,44 @@ void mainLoop()
                             if (coop_mis[tmp].mission == missions[currentMission]) {
                                 coop++;
                                 if (coop == 1) {
-					debug("coop1");
                                     c1 = tmp;
                                 }
                                 else {
-					debug("coop2");
                                     c2 = tmp;
                                     debug("[zlecenie %d, czas %d] Biorę zlecenie z %d i %d", missions[currentMission], lamport, cooperators[c1], cooperators[c2]);
                                     if (deskCount < coop_mis[c1].data and deskCount < coop_mis[c2].data) {
-				      debug("blad 1");
-				      changeState(desk_wait);
+                                        // debug("blad 1");
+                                        changeState(desk_wait);
                                     } else if (deskCount > coop_mis[c1].data or deskCount > coop_mis[c2].data) {
-				      debug("blad 2");
-				      changeState(cooperator_wait);
+                                        // debug("blad 2");
+                                        changeState(cooperator_wait);
                                     } else if (deskCount == coop_mis[c1].data and deskCount == coop_mis[c2].data) {
-				      if (rank < cooperators[c1] and rank < cooperators[c2]) {
-					debug("blad 3");
-					changeState(desk_wait);
-				      }
-				      else {
-					debug("blad 4");
-					changeState(cooperator_wait);
-				      	debug("duoa");
-				      }
+                                        if (rank < cooperators[c1] and rank < cooperators[c2]) {
+                                            // debug("blad 3");
+                                            changeState(desk_wait);
+                                        }
+                                        else {
+                                            // debug("blad 4");
+                                            changeState(cooperator_wait);
+                                        }
                                     } else if (deskCount == coop_mis[c1].data and deskCount < coop_mis[c2].data) {
-				      if (rank < cooperators[c1]) {
-					debug("bald 5");
-					changeState(desk_wait);
-				      }
-				      else {
-					debug("blad 6");
-					changeState(cooperator_wait);
-				      }
+                                        if (rank < cooperators[c1]) {
+                                            // debug("bald 5");
+                                            changeState(desk_wait);
+                                        }
+                                        else {
+                                            // debug("blad 6");
+                                            changeState(cooperator_wait);
+                                        }
                                     } else if (deskCount == coop_mis[c2].data and deskCount < coop_mis[c1].data) {
-				      if (rank < cooperators[c2]) {
-					debug("blad 7");
-					changeState(desk_wait);
-				      }
-				      else {
-					debug("blad 8");
-					changeState(cooperator_wait);
-				      }
+                                        if (rank < cooperators[c2]) {
+                                            // debug("blad 7");
+                                            changeState(desk_wait);
+                                        }
+                                        else {
+                                            // debug("blad 8");
+                                            changeState(cooperator_wait);
+                                        }
                                     }
                                 }
                             }
@@ -186,7 +181,6 @@ void mainLoop()
                     coop = 0;
 
                     if (!deskReqSent) {
-		      debug("stan desk_wait");
 		      lamport +=1;
                         requestTime = lamport;
                         for (int i = 1; i < size; i ++)
@@ -223,7 +217,7 @@ void mainLoop()
                     missionHaveSent = false;
                     coop = 0;
                     tmp = 0;
-		    sleep(1);
+                    sleep(1);
                     break;
                 
                 case dragon_wait:
@@ -247,23 +241,29 @@ void mainLoop()
 
                 case dragon_have:
                     dragonReqSent = false;
+
                     if (!dragonHaveSent and deskBoy) {
                         dragonHaveSent = true;
                         debug("    [zlecenie %d czas %d] Mam szkielet! Chodźcie!", missions[currentMission], lamport);
                         sendPacket(&myPacket, cooperators[c1], DRAGON_KILL);
                         sendPacket(&myPacket, cooperators[c2], DRAGON_KILL);
                     }
+
 		            usleep(sleepTime2);
+
                     if (!dragonReadySent) {
                         dragonReadySent = true;
                         sendPacket(&myPacket, cooperators[c1], DRAGON_READY);
                         sendPacket(&myPacket, cooperators[c2], DRAGON_READY);
                         missions[currentMission] = -1;
-                    }            
+                    }
+
                     if (deskBoy) {
                         deskBoy = false;
                         dragonHaveSent = false;
                     }
+
+                    state = mission_wait;
                     break;
 
                 default:

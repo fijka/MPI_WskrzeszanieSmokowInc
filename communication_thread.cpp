@@ -30,14 +30,13 @@ void *startCommunicationThread(void *ptr)
                 missions.push_back(recvPacket.mission);
                 break;
 
-
             // prośba o dostęp do zlecenia
             case MISSION_REQ:
 	        if (recvPacket.mission != missions[currentMission]) {
                 sendedPacket.mission = recvPacket.mission;
                 lamport += 1;
                 sendedPacket.ts = lamport;
-		//                debug("wysylam ack [%d] do %d, warunek 1 -----", sendedPacket.mission, status.MPI_SOURCE);
+		        // debug("wysylam ack [%d] do %d, warunek 1 -----", sendedPacket.mission, status.MPI_SOURCE);
                 sendPacket(&sendedPacket, status.MPI_SOURCE, MISSION_ACK);
             } else if (state != mission_wait and recvPacket.mission != missions[currentMission]) {
                 sendedPacket.mission = recvPacket.mission;
@@ -49,7 +48,7 @@ void *startCommunicationThread(void *ptr)
                 sendedPacket.mission = recvPacket.mission;
                 lamport += 1;
                 sendedPacket.ts = lamport;
-		// debug("wysylam ack [%d] do %d, warunek 3 -----", sendedPacket.mission, status.MPI_SOURCE);
+		        // debug("wysylam ack [%d] do %d, warunek 3 -----", sendedPacket.mission, status.MPI_SOURCE);
                 sendPacket(&sendedPacket, status.MPI_SOURCE, MISSION_ACK);
             } else if (recvPacket.time < requestTime and recvPacket.data ==  dragonCount) {
                 sendedPacket.mission = recvPacket.mission;
