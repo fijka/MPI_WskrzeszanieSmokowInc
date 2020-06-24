@@ -54,7 +54,9 @@ void mainLoop()
                     if ((int)missions.size() > currentMission) {
                         for (int i = tmp2; i < (int)coop_mis.size(); i++) {
                             if (coop_mis[i].mission < (int)missions.size() and cooperators[i] >= first and cooperators[i] <= last) {
+                                pthread_mutex_lock(&curMisMut);
                                 missions[coop_mis[i].mission] = -1;
+                                pthread_mutex_unlock(&curMisMut);
                                 if (iter == false) tmp2++;
                             } else {
                                 iter = true;
@@ -92,21 +94,6 @@ void mainLoop()
                     break;
 
                 case mission_have:
-                    // for (int i = 0; i < HEAD + BODY + TAIL; i++) {
-                    //     if (reqTab[i].mission != -1) {
-                    //         if (reqTab[i].mission != missions[currentMission] or
-                    //                 reqTab[i].data < dragonCount or
-                    //                 (reqTab[i].time < requestTime and reqTab[i].data ==  dragonCount) or
-                    //                 (reqTab[i].data == dragonCount and reqTab[i].time == requestTime  and rank > i + 1)) {
-                    //             sendedPacket.mission = reqTab[i].mission;
-                    //             lamport += 1;
-                    //             myPacket.ts = lamport;
-                    //             sendedPacket.ts = myPacket.ts;
-                    //             sendPacket(&sendedPacket, i + 1, MISSION_ACK);
-                    //             reqTab[i].mission = -1;
-                    //         }
-                    //     }
-                    // }
 
                     if (!missionHaveSent) {
                         for (int i = 1; i < size; i++) {
@@ -255,7 +242,9 @@ void mainLoop()
                         dragonReadySent = true;
                         sendPacket(&myPacket, cooperators[c1], DRAGON_READY);
                         sendPacket(&myPacket, cooperators[c2], DRAGON_READY);
+                        pthread_mutex_lock(&curMisMut);
                         missions[currentMission] = -1;
+                        pthread_mutex_unlock(&curMisMut);
                     }
 
                     if (deskBoy) {

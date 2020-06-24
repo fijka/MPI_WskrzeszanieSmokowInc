@@ -29,6 +29,7 @@ pthread_mutex_t stateMut = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t ackMut = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t ackDesk = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t ackDragon = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t curMisMut = PTHREAD_MUTEX_INITIALIZER;
 
 
 /* sprawdzenie działania wątków */
