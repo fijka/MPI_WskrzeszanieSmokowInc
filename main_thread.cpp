@@ -47,7 +47,12 @@ void mainLoop()
         bool iter = false;
 
         while (TRUE) {
+	//  pthread_mutex_lock(&stateMut);
+	//  int klor = state;
+	  //debug("%d stana yhjjk",klor);
+	//  pthread_mutex_unlock(&stateMut);
             switch (state) {
+	      
                 case mission_wait:
                     dragonReadySent = false;
                     sleep(1);
@@ -72,16 +77,16 @@ void mainLoop()
                         if (!missionReqSent and myPacket.mission != -1) {
                             lamport += 1;
                             requestTime = lamport;
+			    pthread_mutex_lock(&ackMut);
+			    ackMission = 0;
+			    pthread_mutex_unlock(&ackMut);
                             for (int i = first; i < last + 1; i++) {
                                 if (i != rank) {
 						            lamport += 1;
 		    		                myPacket.ts = lamport;
                                     myPacket.data = dragonCount;
                                     myPacket.time = requestTime;
-                                    pthread_mutex_lock(&ackMut);
-                                    ackMission = 0;
-                                    pthread_mutex_unlock(&ackMut);
-				                    debug("[%d] REQ do %d", myPacket.mission, i);
+		                   // debug("[%d] REQ do %d", myPacket.mission, i);
                                     sendPacket(&myPacket, i, MISSION_REQ);
                                 }
                             }
@@ -94,10 +99,12 @@ void mainLoop()
                     break;
 
                 case mission_have:
-
+		  //debug("dhhvddhhvhhvh  %d", missionHaveSent);
                     if (!missionHaveSent) {
-                        for (int i = 1; i < size; i++) {
-                            if (i != rank) {
+		    //  debug("gosossooss");
+		      for (int i = 1; i < size; i++) {
+
+			  if (i != rank) {
                                 myPacket.mission = missions[currentMission];
                                 myPacket.data = deskCount;
 				                lamport += 1;
@@ -119,36 +126,37 @@ void mainLoop()
                                     c2 = tmp;
                                     debug("[zlecenie %d, czas %d] Biorę zlecenie z %d i %d", missions[currentMission], lamport, cooperators[c1], cooperators[c2]);
                                     if (deskCount < coop_mis[c1].data and deskCount < coop_mis[c2].data) {
-                                        // debug("blad 1");
+                      //                   debug("blad 1");
                                         changeState(desk_wait);
                                     } else if (deskCount > coop_mis[c1].data or deskCount > coop_mis[c2].data) {
-                                        // debug("blad 2");
+                        //                 debug("blad 2");
                                         changeState(cooperator_wait);
                                     } else if (deskCount == coop_mis[c1].data and deskCount == coop_mis[c2].data) {
                                         if (rank < cooperators[c1] and rank < cooperators[c2]) {
-                                            // debug("blad 3");
+                          //                  debug("blad 3");
                                             changeState(desk_wait);
                                         }
                                         else {
-                                            // debug("blad 4");
+                            //                debug("blad 4");
                                             changeState(cooperator_wait);
+			//		    debug("stan %d", state);
                                         }
                                     } else if (deskCount == coop_mis[c1].data and deskCount < coop_mis[c2].data) {
                                         if (rank < cooperators[c1]) {
-                                            // debug("bald 5");
+                          //                   debug("bald 5");
                                             changeState(desk_wait);
                                         }
                                         else {
-                                            // debug("blad 6");
+                            //                debug("blad 6");
                                             changeState(cooperator_wait);
                                         }
                                     } else if (deskCount == coop_mis[c2].data and deskCount < coop_mis[c1].data) {
                                         if (rank < cooperators[c2]) {
-                                            // debug("blad 7");
+                              //              debug("blad 7");
                                             changeState(desk_wait);
                                         }
                                         else {
-                                            // debug("blad 8");
+                                //            debug("blad 8");
                                             changeState(cooperator_wait);
                                         }
                                     }
@@ -208,7 +216,7 @@ void mainLoop()
                     break;
                 
                 case dragon_wait:
-
+		  //debug("dlaczego tu %d", state);
                     if (!dragonReqSent) {
                         lamport +=1;
                         requestTime= lamport;
@@ -227,7 +235,9 @@ void mainLoop()
                     break;
 
                 case dragon_have:
-                    dragonReqSent = false;
+		 // debug("jrsttdghjgdgj");
+		  sleep(1);
+		  dragonReqSent = false;
 
                     if (!dragonHaveSent and deskBoy) {
                         dragonHaveSent = true;
@@ -245,6 +255,7 @@ void mainLoop()
                         pthread_mutex_lock(&curMisMut);
                         missions[currentMission] = -1;
                         pthread_mutex_unlock(&curMisMut);
+			changeState(mission_wait);
                     }
 
                     if (deskBoy) {
@@ -252,7 +263,7 @@ void mainLoop()
                         dragonHaveSent = false;
                     }
 
-                    state = mission_wait;
+                    
                     break;
 
                 default:

@@ -53,13 +53,14 @@ void *startCommunicationThread(void *ptr)
                 //debug("wysylam ack [%d] do %d, warunek 2 -----", sendedPacket.mission, status.MPI_SOURCE);
                 sendPacket(&sendedPacket, status.MPI_SOURCE, MISSION_ACK);
             } else if (recvPacket.data < dragonCount) {
+		  //  debug("dragonCount: %d ^^^^, recvPacket.data: %d", dragonCount, recvPacket.data);
                 pthread_mutex_lock(&curMisMut);
                 missions[recvPacket.mission] = -1;
                 pthread_mutex_unlock(&curMisMut);
                 sendedPacket.mission = recvPacket.mission;
                 lamport += 1;
                 sendedPacket.ts = lamport;
-		        // debug("wysylam ack [%d] do %d, warunek 3 -----", sendedPacket.mission, status.MPI_SOURCE);
+		    //     debug("wysylam ack [%d] do %d, warunek 3 -----", sendedPacket.mission, status.MPI_SOURCE);
                 sendPacket(&sendedPacket, status.MPI_SOURCE, MISSION_ACK);
             } else if (recvPacket.time < requestTime and recvPacket.data ==  dragonCount) {
                 pthread_mutex_lock(&curMisMut);
@@ -86,16 +87,19 @@ void *startCommunicationThread(void *ptr)
 
             // zgoda na otrzymanie zlecenia
             case MISSION_ACK:
-                if (state == mission_wait and recvPacket.mission == missions[currentMission]) {
+                //debug("wchodze do mission_ack dzieki %d [[[recvPacket.mission=%d, missions[currentMission=%d, state=%d]]]", status.MPI_SOURCE, recvPacket.mission, missions[currentMission], state);
+		if (state == mission_wait and recvPacket.mission == missions[currentMission]) {
                     pthread_mutex_lock(&ackMut);
                     ackMission += 1;
-		    //  debug("[%d] ack od %d", recvPacket.mission, status.MPI_SOURCE)
+		  //  debug("[%d] ack od %d", recvPacket.mission, status.MPI_SOURCE)
                     if (ackMission == last - first) {
+		      //debug("trattaa");
                         changeState(mission_have);
 			ackMission = 0;
                     }
                     pthread_mutex_unlock(&ackMut);
                 }
+		//debug("kwiatfdjgfkkfg");
                 break;
 
             // informacja o dostępie do zlecenia innego profesjonalisty
@@ -120,7 +124,7 @@ void *startCommunicationThread(void *ptr)
 
             // zgoda na dostęp do biurka
             case DESK_ACK:
-                if (state = desk_wait) {
+                if (state == desk_wait) {
                     ackDesk += 1;
                     if (ackDesk >= size - 1 - DESKS - 2) {
                         deskCount += 1;
@@ -146,10 +150,10 @@ void *startCommunicationThread(void *ptr)
 
             // zgoda na dostęp do szkieletu
             case DRAGON_ACK:
-                if (state = dragon_wait) {
+                if (state == dragon_wait) {
                     ackDragon += 1; 
                     if (ackDragon > size - 1 - DRAGONS - 2) {
-                        dragonCount += 1;
+                        
                         changeState(dragon_have);
                         ackDragon = 0;
                     }

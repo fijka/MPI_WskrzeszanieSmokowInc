@@ -15,9 +15,9 @@
 #define TRUE 1
 #define FALSE 0
 
-#define HEAD 3
-#define BODY 3
-#define TAIL 3
+#define HEAD 4
+#define BODY 4
+#define TAIL 1
 extern int DESKS;
 extern int DRAGONS;
 
@@ -43,7 +43,7 @@ extern int requestTime;
 extern packet_t reqTab[HEAD + BODY + TAIL + 1];
 extern packet_t dragTab[HEAD + BODY + TAIL + 1];
 extern pthread_mutex_t ackMut, ackDesk, ackDragon;
-extern pthread_mutex_t curMisMut;
+extern pthread_mutex_t curMisMut, stateMut;
 extern int ackMission;
 
 
