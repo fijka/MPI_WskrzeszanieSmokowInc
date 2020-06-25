@@ -35,7 +35,6 @@ pthread_mutex_t curMisMut = PTHREAD_MUTEX_INITIALIZER;
 /* sprawdzenie działania wątków */
 void check_thread_support(int provided)
 {
-    // printf("THREAD SUPPORT: chcemy %d. Co otrzymamy?\n", provided);
     switch (provided) {
         case MPI_THREAD_SINGLE: 
             printf("Brak wsparcia dla wątków, kończę\n");
@@ -83,15 +82,12 @@ void initialize(int *argc, char ***argv)
 
         // znalezienie procesów o tej samej profesji
         if (rank > HEAD + BODY) {
-            //debug("ogon");
             first = HEAD + BODY + 1;
             last = HEAD + BODY + TAIL;
         } else if (rank > HEAD) {
-            //debug("ciało");
             first = HEAD + 1;
             last = HEAD + BODY;
         } else {
-            //debug("głowa");
             first = 1;
             last = HEAD;
         }
@@ -120,7 +116,6 @@ void sendPacket(packet_t *pkt, int destination, int tag)
         pkt = (packet_t*) malloc(sizeof(packet_t));
         freepkt = 1;
     }
-    // pkt->src = rank; //??
     MPI_Send(pkt, 1, MPI_PACKET_T, destination, tag, MPI_COMM_WORLD);
     if (freepkt)
         free(pkt);

@@ -41,7 +41,6 @@ void *startCommunicationThread(void *ptr)
                 sendedPacket.mission = recvPacket.mission;
                 lamport += 1;
                 sendedPacket.ts = lamport;
-		        // debug("wysylam ack [%d] do %d, warunek 1 -----", sendedPacket.mission, status.MPI_SOURCE);
                 sendPacket(&sendedPacket, status.MPI_SOURCE, MISSION_ACK);
             } else if (state != mission_wait and recvPacket.mission != missions[currentMission]) {
                 pthread_mutex_lock(&curMisMut);
@@ -50,17 +49,14 @@ void *startCommunicationThread(void *ptr)
                 sendedPacket.mission = recvPacket.mission;
                 lamport += 1;
                 sendedPacket.ts = lamport;
-                //debug("wysylam ack [%d] do %d, warunek 2 -----", sendedPacket.mission, status.MPI_SOURCE);
                 sendPacket(&sendedPacket, status.MPI_SOURCE, MISSION_ACK);
             } else if (recvPacket.data < dragonCount) {
-		  //  debug("dragonCount: %d ^^^^, recvPacket.data: %d", dragonCount, recvPacket.data);
                 pthread_mutex_lock(&curMisMut);
                 missions[recvPacket.mission] = -1;
                 pthread_mutex_unlock(&curMisMut);
                 sendedPacket.mission = recvPacket.mission;
                 lamport += 1;
                 sendedPacket.ts = lamport;
-		    //     debug("wysylam ack [%d] do %d, warunek 3 -----", sendedPacket.mission, status.MPI_SOURCE);
                 sendPacket(&sendedPacket, status.MPI_SOURCE, MISSION_ACK);
             } else if (recvPacket.time < requestTime and recvPacket.data ==  dragonCount) {
                 pthread_mutex_lock(&curMisMut);
@@ -69,7 +65,6 @@ void *startCommunicationThread(void *ptr)
                 sendedPacket.mission = recvPacket.mission;
                 lamport += 1;
                 sendedPacket.ts = lamport;
-                //debug("wysylam ack [%d] do %d, warunek 4 -----", sendedPacket.mission, status.MPI_SOURCE);
                 sendPacket(&sendedPacket, status.MPI_SOURCE, MISSION_ACK);
             } else if (recvPacket.data == dragonCount and recvPacket.time == requestTime and rank > status.MPI_SOURCE) {
                 pthread_mutex_lock(&curMisMut);
@@ -78,7 +73,6 @@ void *startCommunicationThread(void *ptr)
                 sendedPacket.mission = recvPacket.mission;
                 lamport += 1;
                 sendedPacket.ts = lamport;
-                //debug("wysylam ack [%d] do %d,  warunek 5 -----", sendedPacket.mission, status.MPI_SOURCE);
                 sendPacket(&sendedPacket, status.MPI_SOURCE, MISSION_ACK);
                 } else {
                     //reqTab[status.MPI_SOURCE] = recvPacket;
@@ -87,19 +81,15 @@ void *startCommunicationThread(void *ptr)
 
             // zgoda na otrzymanie zlecenia
             case MISSION_ACK:
-                //debug("wchodze do mission_ack dzieki %d [[[recvPacket.mission=%d, missions[currentMission=%d, state=%d]]]", status.MPI_SOURCE, recvPacket.mission, missions[currentMission], state);
-		if (state == mission_wait and recvPacket.mission == missions[currentMission]) {
+		        if (state == mission_wait and recvPacket.mission == missions[currentMission]) {
                     pthread_mutex_lock(&ackMut);
                     ackMission += 1;
-		  //  debug("[%d] ack od %d", recvPacket.mission, status.MPI_SOURCE)
                     if (ackMission == last - first) {
-		      //debug("trattaa");
                         changeState(mission_have);
-			ackMission = 0;
+			            ackMission = 0;
                     }
                     pthread_mutex_unlock(&ackMut);
                 }
-		//debug("kwiatfdjgfkkfg");
                 break;
 
             // informacja o dostępie do zlecenia innego profesjonalisty

@@ -13,15 +13,12 @@ void mainLoop()
 	info.ts = 0;
         while (TRUE) {
             // generowanie zleceń i informaowanie o nich
-		    //czekanie losowy czas na wygenerowanie zlecenia 
 		    float sleepTime = 100000L + (long)((1e6-1e5) * rand()/(RAND_MAX + 1.0));
-         	//float sleepTime = 1000000L;
 		    usleep(sleepTime);                
             info.mission = task_number;
-           sleep(1);   // można wyrzucić na końcu
+            sleep(1);
             for (int i = 1; i < size; i++) {
-	      //debug("sended %d", i);
-	      sendPacket(&info, i, MISSION_AD);
+	            sendPacket(&info, i, MISSION_AD);
             }
             debug("Nowe zlecenie! Nowe zlecenie! [%d]", task_number);
             task_number++;
@@ -47,10 +44,6 @@ void mainLoop()
         bool iter = false;
 
         while (TRUE) {
-	//  pthread_mutex_lock(&stateMut);
-	//  int klor = state;
-	  //debug("%d stana yhjjk",klor);
-	//  pthread_mutex_unlock(&stateMut);
             switch (state) {
 	      
                 case mission_wait:
@@ -77,16 +70,15 @@ void mainLoop()
                         if (!missionReqSent and myPacket.mission != -1) {
                             lamport += 1;
                             requestTime = lamport;
-			    pthread_mutex_lock(&ackMut);
-			    ackMission = 0;
-			    pthread_mutex_unlock(&ackMut);
+                            pthread_mutex_lock(&ackMut);
+                            ackMission = 0;
+                            pthread_mutex_unlock(&ackMut);
                             for (int i = first; i < last + 1; i++) {
                                 if (i != rank) {
 						            lamport += 1;
 		    		                myPacket.ts = lamport;
                                     myPacket.data = dragonCount;
                                     myPacket.time = requestTime;
-		                   // debug("[%d] REQ do %d", myPacket.mission, i);
                                     sendPacket(&myPacket, i, MISSION_REQ);
                                 }
                             }
@@ -99,12 +91,9 @@ void mainLoop()
                     break;
 
                 case mission_have:
-		  //debug("dhhvddhhvhhvh  %d", missionHaveSent);
                     if (!missionHaveSent) {
-		    //  debug("gosossooss");
-		      for (int i = 1; i < size; i++) {
-
-			  if (i != rank) {
+		                for (int i = 1; i < size; i++) {
+			                if (i != rank) {
                                 myPacket.mission = missions[currentMission];
                                 myPacket.data = deskCount;
 				                lamport += 1;
@@ -126,37 +115,28 @@ void mainLoop()
                                     c2 = tmp;
                                     debug("[zlecenie %d, czas %d] Biorę zlecenie z %d i %d", missions[currentMission], lamport, cooperators[c1], cooperators[c2]);
                                     if (deskCount < coop_mis[c1].data and deskCount < coop_mis[c2].data) {
-                      //                   debug("blad 1");
                                         changeState(desk_wait);
                                     } else if (deskCount > coop_mis[c1].data or deskCount > coop_mis[c2].data) {
-                        //                 debug("blad 2");
                                         changeState(cooperator_wait);
                                     } else if (deskCount == coop_mis[c1].data and deskCount == coop_mis[c2].data) {
                                         if (rank < cooperators[c1] and rank < cooperators[c2]) {
-                          //                  debug("blad 3");
                                             changeState(desk_wait);
                                         }
                                         else {
-                            //                debug("blad 4");
                                             changeState(cooperator_wait);
-			//		    debug("stan %d", state);
                                         }
                                     } else if (deskCount == coop_mis[c1].data and deskCount < coop_mis[c2].data) {
                                         if (rank < cooperators[c1]) {
-                          //                   debug("bald 5");
                                             changeState(desk_wait);
                                         }
                                         else {
-                            //                debug("blad 6");
                                             changeState(cooperator_wait);
                                         }
                                     } else if (deskCount == coop_mis[c2].data and deskCount < coop_mis[c1].data) {
                                         if (rank < cooperators[c2]) {
-                              //              debug("blad 7");
                                             changeState(desk_wait);
                                         }
                                         else {
-                                //            debug("blad 8");
                                             changeState(cooperator_wait);
                                         }
                                     }
@@ -169,18 +149,16 @@ void mainLoop()
                     break;
                 
                 case desk_wait:
-		  //		  debug("stan desk_wait");
-		  missionHaveSent = false;
+		            missionHaveSent = false;
                     tmp = 0;
                     deskBoy = true;
                     coop = 0;
 
                     if (!deskReqSent) {
-		      lamport +=1;
+		                lamport +=1;
                         requestTime = lamport;
                         for (int i = 1; i < size; i ++)
 			            {
-                            
                             if (rank != i and cooperators[c1] != rank and cooperators[c2] != rank) {
                                 lamport += 1;
                                 myPacket.ts = lamport;
@@ -196,7 +174,6 @@ void mainLoop()
                 case desk_have:
                     debug("  [zlecenie %d czas %d] Jestem w gildii, czekajcie!", missions[currentMission], lamport);
                     deskReqSent = false;
-                    // sleep
 		            usleep(sleepTime1);                
                     changeState(dragon_wait);
                     for (int i = 1; i < size; i++) {
@@ -216,7 +193,6 @@ void mainLoop()
                     break;
                 
                 case dragon_wait:
-		  //debug("dlaczego tu %d", state);
                     if (!dragonReqSent) {
                         lamport +=1;
                         requestTime= lamport;
@@ -235,9 +211,8 @@ void mainLoop()
                     break;
 
                 case dragon_have:
-		 // debug("jrsttdghjgdgj");
-		  sleep(1);
-		  dragonReqSent = false;
+                    sleep(1);
+                    dragonReqSent = false;
 
                     if (!dragonHaveSent and deskBoy) {
                         dragonHaveSent = true;
@@ -255,7 +230,7 @@ void mainLoop()
                         pthread_mutex_lock(&curMisMut);
                         missions[currentMission] = -1;
                         pthread_mutex_unlock(&curMisMut);
-			changeState(mission_wait);
+			            changeState(mission_wait);
                     }
 
                     if (deskBoy) {

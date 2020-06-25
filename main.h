@@ -15,9 +15,9 @@
 #define TRUE 1
 #define FALSE 0
 
-#define HEAD 4
-#define BODY 4
-#define TAIL 1
+#define HEAD 5
+#define BODY 6
+#define TAIL 4
 extern int DESKS;
 extern int DRAGONS;
 
