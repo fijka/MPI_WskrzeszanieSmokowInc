@@ -141,8 +141,9 @@ void *startCommunicationThread(void *ptr)
             // zgoda na dostęp do szkieletu
             case DRAGON_ACK:
                 if (state == dragon_wait) {
+		  
                     ackDragon += 1; 
-                    if (ackDragon > size - 1 - DRAGONS - 2) {
+                    if (ackDragon >= size - 1 - DRAGONS - 2) {
                         
                         changeState(dragon_have);
                         ackDragon = 0;

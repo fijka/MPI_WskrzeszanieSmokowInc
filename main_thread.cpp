@@ -16,7 +16,7 @@ void mainLoop()
 		    float sleepTime = 100000L + (long)((1e6-1e5) * rand()/(RAND_MAX + 1.0));
 		    usleep(sleepTime);                
             info.mission = task_number;
-            sleep(1);
+            //sleep(1);
             for (int i = 1; i < size; i++) {
 	            sendPacket(&info, i, MISSION_AD);
             }
@@ -155,11 +155,13 @@ void mainLoop()
                     coop = 0;
 
                     if (!deskReqSent) {
+      
 		                lamport +=1;
                         requestTime = lamport;
+			debug("    [zlecenie %d czas %d] Staram sie o miejsce w gildii!", missions[currentMission], lamport);
                         for (int i = 1; i < size; i ++)
 			            {
-                            if (rank != i and cooperators[c1] != rank and cooperators[c2] != rank) {
+                            if (rank != i and cooperators[c1] != i and cooperators[c2] != i) {
                                 lamport += 1;
                                 myPacket.ts = lamport;
                                 myPacket.time = requestTime;
@@ -176,6 +178,7 @@ void mainLoop()
                     deskReqSent = false;
 		            usleep(sleepTime1);                
                     changeState(dragon_wait);
+		    debug("   [zlecenie %d czas %d] Zwalniam biurko!", missions[currentMission], lamport);
                     for (int i = 1; i < size; i++) {
                         if (reqTab[i].mission != -1 and i != rank) {
                             lamport++; 
@@ -196,9 +199,10 @@ void mainLoop()
                     if (!dragonReqSent) {
                         lamport +=1;
                         requestTime= lamport;
+			debug("     [zlecenie %d czas %d] Staram sie o szkielet smoka!", missions[currentMission], lamport);
                         for (int i = 1; i < size; i++)
 			            {
-                            if (rank != i and rank != cooperators[c1] and rank != cooperators[c2]) {
+                            if (rank != i and i != cooperators[c1] and i != cooperators[c2]) {
                                 lamport += 1;
                                 myPacket.ts = lamport;
                                 myPacket.time = requestTime;
@@ -231,6 +235,7 @@ void mainLoop()
                         missions[currentMission] = -1;
                         pthread_mutex_unlock(&curMisMut);
 			            changeState(mission_wait);
+				    
                     }
 
                     if (deskBoy) {
